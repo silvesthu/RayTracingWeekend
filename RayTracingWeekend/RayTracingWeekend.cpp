@@ -46,12 +46,11 @@ vec3 color(const ray& r, hitable *world)
 template <class Function>
 __int64 time_call(Function&& f)
 {
-	std::chrono::high_resolution_clock timer;
-	auto start = timer.now();
+	auto start = std::chrono::high_resolution_clock::now();
 
 	f();
 
-	auto end = timer.now();
+	auto end = std::chrono::high_resolution_clock::now();
 	auto diff = end - start;
 
 	return std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
@@ -99,7 +98,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			// no obvious acceleration on this parallel
 			parallel_for(0, nx, 1, [&](int i) 
 			{
-				const int subPixelCount = 1;
+				const int subPixelCount = 100;
 				vec3 subPixels[subPixelCount];
 				parallel_for(0, subPixelCount, 1, [&](int s)
 				{
