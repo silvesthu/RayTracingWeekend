@@ -58,6 +58,13 @@ TEST(ConcurrencyTest, Reduce)
 	ASSERT_EQ(max_i, 30);
 }
 
+TEST(RandomTest, Random)
+{
+	std::uniform_real_distribution<float> distribution(0.0, 1.0);
+	ASSERT_EQ(distribution.min(), 0.0f);
+	ASSERT_EQ(distribution.max(), 1.0f);
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	::testing::InitGoogleTest(&argc, argv);

@@ -27,7 +27,6 @@ int ny = 200;
 // y : -1  ~  1
 // z :  0  ~ -1
 // center : (0, 0, -1)
-// shadertoy exercise: https://www.shadertoy.com/view/XsdSW8
 vec3 color(const ray& r, hitable *world)
 {
 	hit_record rec;
@@ -69,8 +68,8 @@ void serial_for(_Index_type _First, _Index_type _Last, _Index_type _Step, const 
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	std::minstd_rand random;
-	float random_max = (1.0f * std::minstd_rand::max());
+	std::default_random_engine generator;
+	std::uniform_real_distribution<float> random(0.0, 1.0);
 
 	std::ofstream out("1.ppm");
 	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
@@ -100,12 +99,12 @@ int _tmain(int argc, _TCHAR* argv[])
 			// no obvious acceleration on this parallel
 			parallel_for(0, nx, 1, [&](int i) 
 			{
-				const int subPixelCount = 100;
-				std::vector<vec3> subPixels(subPixelCount);
+				const int subPixelCount = 1;
+				vec3 subPixels[subPixelCount];
 				parallel_for(0, subPixelCount, 1, [&](int s)
 				{
-					float u = float(i + random() / random_max) / float(nx);
-					float v = float(j + random() / random_max) / float(ny);
+					float u = float(i + random(generator)) / float(nx);
+					float v = float(j + random(generator)) / float(ny);
 
 					// trace
 					ray r = cam.get_ray(u, v);
@@ -113,16 +112,8 @@ int _tmain(int argc, _TCHAR* argv[])
 					subPixels[s] = color(r, world);
 				});
 
-				vec3 zero(0, 0, 0);
-
-				// even slower on parallel_reduce
-				//auto sum = parallel_reduce(subPixels.begin(), subPixels.end(), zero, [&](vec3& result, vec3& next)
-				//{
-				//	return result + next;
-				//});
-
-				auto sum = zero;
-				for (auto& c : subPixels)
+				vec3 sum(0, 0, 0);
+				for (auto& c : subPixels) // even slower with parallel_reduce
 				{
 					sum += c;
 				}
@@ -156,6 +147,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	out.close();
 
+	// ImageMagick
 	system("convert 1.ppm 1.png");
 	system("start 1.png");
 
