@@ -55,6 +55,7 @@ vec3 color(const ray& r, hitable *world)
 	}
 	else
 	{
+		// * Gradient background along y-axis
 		vec3 unit_direction = normalize(r.direction());
 		float t = 0.5f * (unit_direction.y + 1.0f);
 		return lerp(vec3(0.5f, 0.7f, 1.0f), vec3(1.0f, 1.0f, 1.0f), t);
@@ -140,8 +141,12 @@ int _tmain(int argc, _TCHAR* argv[])
 					sum += c;
 				}
 
+				// to gamma 2
+				auto col = sum / subPixelCount;
+				col = vec3(sqrt(col.x), sqrt(col.y), sqrt(col.z));
+
 				// save to canvas
-				canvas[j * nx + i] = sum / subPixelCount;
+				canvas[j * nx + i] = col;
 			});
 		});
 	});
