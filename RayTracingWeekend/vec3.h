@@ -6,7 +6,7 @@
 class vec3
 {
 public:
-	vec3() {}
+	vec3() { x = 0; y = 0; z = 0; } // initialize it in case...
 	
 	// float -> vec3 convesion
 	vec3(float t) { x = t; y = t; z = t; }

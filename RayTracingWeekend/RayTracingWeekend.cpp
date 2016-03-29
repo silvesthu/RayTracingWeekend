@@ -23,6 +23,19 @@ using namespace concurrency;
 int nx = 400;
 int ny = 200;
 
+std::uniform_real<float> uniform;
+std::minstd_rand engine;
+
+vec3 random_in_unit_sphere() 
+{
+	vec3 p = { 0, 0, 0 };
+	do {
+		auto random_vector = vec3(uniform(engine), uniform(engine), uniform(engine));
+		p = 2.0f * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
+	} while (dot(p, p) >= 1.0f); // unit sphere
+	return p;
+}
+
 // x : -2  ~  2
 // y : -1  ~  1
 // z :  0  ~ -1
@@ -32,7 +45,13 @@ vec3 color(const ray& r, hitable *world)
 	hit_record rec;
 	if (world->hit(r, 0.0f, FLT_MAX, rec))
 	{
-		return 0.5f * (rec.normal + 1);
+		// * Show normal
+		//return 0.5f * (rec.normal + 1); 
+
+		// * Bounce towards unit sphere above first contact point
+		vec3 random_vector = random_in_unit_sphere();
+		vec3 target = rec.p + rec.normal + random_vector;
+		return 0.5f * color(ray(rec.p, target - rec.p), world); // what if bounce never end ? need a limit here
 	}
 	else
 	{
@@ -65,11 +84,15 @@ void serial_for(_Index_type _First, _Index_type _Last, _Index_type _Step, const 
 	}
 }
 
+template <typename _Index_type, typename _Function>
+void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Function& _Func)
+{
+	//serial_for(_First, _Last, _Step, _Func);
+	parallel_for(_First, _Last, _Step, _Func);
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	std::default_random_engine generator;
-	std::uniform_real_distribution<float> random(0.0, 1.0);
-
 	std::ofstream out("1.ppm");
 	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
 	std::cout.rdbuf(out.rdbuf()); //redirect std::cout
@@ -93,17 +116,17 @@ int _tmain(int argc, _TCHAR* argv[])
 	__int64 elapsedTrace = time_call([&]
 	{
 		// accelerated on this parallel
-		parallel_for(0, ny, 1, [&](int j)
+		_for(0, ny, 1, [&](int j)
 		{
 			// no obvious acceleration on this parallel
-			parallel_for(0, nx, 1, [&](int i) 
+			_for(0, nx, 1, [&](int i)
 			{
 				const int subPixelCount = 100;
 				vec3 subPixels[subPixelCount];
-				parallel_for(0, subPixelCount, 1, [&](int s)
+				_for(0, subPixelCount, 1, [&](int s)
 				{
-					float u = float(i + random(generator)) / float(nx);
-					float v = float(j + random(generator)) / float(ny);
+					float u = float(i + uniform(engine)) / float(nx);
+					float v = float(j + uniform(engine)) / float(ny);
 
 					// trace
 					ray r = cam.get_ray(u, v);
