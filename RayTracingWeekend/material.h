@@ -47,15 +47,16 @@ public:
 class metal : public material
 {
 public:
-	explicit metal(const vec3& a) : albedo(a) {}
+	explicit metal(const vec3& a, float f) : albedo(a), fuzz(f) {}
 	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
 	{
 		// reflected ray goes to mirror-reflected direction
 		vec3 reflected = reflect(normalize(r_in.direction()), rec.normal);
-		scattered = ray(rec.p, reflected);
+		scattered = ray(rec.p, reflected + fuzz * random_in_unit_sphere());
 		attenuation = albedo;
-		return (dot(scattered.direction(), rec.normal) > 0); // ray from front face
+		return (dot(scattered.direction(), rec.normal) > 0); // ray from front face ? make no difference in this sample now
 	}
 
 	vec3 albedo; // metal use albedo ?
+	float fuzz;
 };

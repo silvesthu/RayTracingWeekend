@@ -123,9 +123,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::make_unique<sphere>(vec3(0, -100.5f, -1), 100.0f, 
 			std::make_unique<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
 		std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
-			std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f))),
+			std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 1.0f)),
 		std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
-			std::make_unique<metal>(vec3(0.8f, 0.8f, 0.8f)))
+			std::make_unique<metal>(vec3(0.8f, 0.8f, 0.8f), 0.3f))
 	};
 
 	hitable_list world(list, ARRAY_SIZE(list));
