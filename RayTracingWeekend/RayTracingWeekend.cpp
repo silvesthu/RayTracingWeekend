@@ -13,45 +13,56 @@ using namespace concurrency;
 
 #undef min
 #undef max
+#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 #include "vec3.h"
 #include "ray.h"
 #include "sphere.h"
 #include "hitable_list.h"
 #include "camera.h"
+#include "material.h"
 
-int nx = 400;
-int ny = 200;
-
-std::uniform_real<float> uniform;
-std::minstd_rand engine;
-
-vec3 random_in_unit_sphere() 
-{
-	vec3 p = { 0, 0, 0 };
-	do {
-		auto random_vector = vec3(uniform(engine), uniform(engine), uniform(engine));
-		p = 2.0f * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
-	} while (dot(p, p) >= 1.0f); // unit sphere
-	return p;
-}
+const int nx = 400;
+const int ny = 200;
+const int subPixelCount = 400;
+const int max_depth = 50;
 
 // x : -2  ~  2
 // y : -1  ~  1
 // z :  0  ~ -1
 // center : (0, 0, -1)
-vec3 color(const ray& r, hitable *world)
+// depth is recursion depth...
+vec3 color(const ray& r, hitable *world, int depth)
 {
 	hit_record rec;
-	if (world->hit(r, 0.0f, FLT_MAX, rec))
+	// z_min = 0 will cause hit in the same point -> darker
+	if (world->hit(r, 0.001f, FLT_MAX, rec))
 	{
+		ray scattered;
+		vec3 attenuation;
+
+		// * Bounce and reflect depending on material
+		if (depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+		{
+			return attenuation * color(scattered, world, depth + 1);
+		}
+		else
+		{
+			return vec3(0, 0, 0);
+		}
+
 		// * Show normal
-		//return 0.5f * (rec.normal + 1); 
+		{
+			// return 0.5f * (rec.normal + 1); 
+		}
+		
 
 		// * Bounce towards unit sphere above first contact point
-		vec3 random_vector = random_in_unit_sphere();
-		vec3 target = rec.p + rec.normal + random_vector;
-		return 0.5f * color(ray(rec.p, target - rec.p), world); // what if bounce never end ? need a limit here
+		{
+			// vec3 random_vector;// = random_in_unit_sphere();
+			// vec3 target = rec.p + rec.normal + random_vector;
+			// return 0.5f * color(ray(rec.p, target - rec.p), world); // what if bounce never end ? need a limit here
+		}		
 	}
 	else
 	{
@@ -105,15 +116,24 @@ int _tmain(int argc, _TCHAR* argv[])
 	vec3 vertical(0.0f, 2.0f, 0.0f);
 	vec3 origin(0.0f, 0.0f, 0.0f);
 
-	auto canvas = std::unique_ptr<vec3[]>(new vec3[nx * ny]);
-	hitable* list[2];
+	std::unique_ptr<hitable> list[] =
+	{
+		std::make_unique<sphere>(vec3(0, 0, -1), 0.5f, 
+			std::make_unique<lambertian>(vec3(0.8f, 0.3f, 0.3f))),
+		std::make_unique<sphere>(vec3(0, -100.5f, -1), 100.0f, 
+			std::make_unique<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
+		std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
+			std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f))),
+		std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
+			std::make_unique<metal>(vec3(0.8f, 0.8f, 0.8f)))
+	};
 
-	auto world = new hitable_list(list, 2);
-	list[0] = new sphere(vec3(0, 0, -1), 0.5);
-	list[1] = new sphere(vec3(0, -100.5, -1), 100);
-
+	hitable_list world(list, ARRAY_SIZE(list));
 	camera cam;
 
+	std::uniform_real<float> uniform;
+	std::minstd_rand engine;
+	auto canvas = std::unique_ptr<vec3[]>(new vec3[nx * ny]);
 	__int64 elapsedTrace = time_call([&]
 	{
 		// accelerated on this parallel
@@ -122,7 +142,6 @@ int _tmain(int argc, _TCHAR* argv[])
 			// no obvious acceleration on this parallel
 			_for(0, nx, 1, [&](int i)
 			{
-				const int subPixelCount = 100;
 				vec3 subPixels[subPixelCount];
 				_for(0, subPixelCount, 1, [&](int s)
 				{
@@ -132,7 +151,7 @@ int _tmain(int argc, _TCHAR* argv[])
 					// trace
 					ray r = cam.get_ray(u, v);
 					vec3 p = r.point_at_parameter(2.0f);
-					subPixels[s] = color(r, world);
+					subPixels[s] = color(r, &world, 0);
 				});
 
 				vec3 sum(0, 0, 0);

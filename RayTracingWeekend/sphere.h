@@ -1,13 +1,14 @@
 #pragma once
 
 #include "hitable.h"
+#include "material.h"
 
 class sphere : public hitable
 {
 public:
-	sphere() {}
-	sphere(vec3 cen, float r) : center(cen), radius(r) {}
-	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const
+	sphere() : center(0, 0, 0), radius(0), mat(nullptr) {}
+	sphere(vec3 cen, float r, std::unique_ptr<material> m) : center(cen), radius(r), mat(std::move(m)) {}
+	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
 	{
 		vec3 oc = r.origin() - center;
 		float a = dot(r.direction(), r.direction());
@@ -23,6 +24,7 @@ public:
 				rec.t = temp;
 				rec.p = r.point_at_parameter(rec.t);
 				rec.normal = (rec.p - center) / radius;
+				rec.mat_ptr = mat.get();
 				return true;
 			}
 			temp = (-b + sqrt(discriminant)) / a;
@@ -32,6 +34,7 @@ public:
 				rec.t = temp;
 				rec.p = r.point_at_parameter(rec.t);
 				rec.normal = (rec.p - center) / radius;
+				rec.mat_ptr = mat.get();
 				return true;
 			}
 		}
@@ -40,4 +43,5 @@ public:
 	}
 	vec3 center;
 	float radius;
+	std::unique_ptr<material> mat;
 };
