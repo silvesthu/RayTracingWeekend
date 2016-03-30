@@ -8,6 +8,10 @@
 #include <random>
 #include <algorithm>
 
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include <amp.h>                // C++ AMP header file
 using namespace concurrency;
 
@@ -22,9 +26,15 @@ using namespace concurrency;
 #include "camera.h"
 #include "material.h"
 
-const int nx = 400;
-const int ny = 200;
-const int subPixelCount = 400;
+#ifdef _DEBUG
+	const int size_multipler = 1;
+#else
+	const int size_multipler = 2;
+#endif
+
+const int nx = 200 * size_multipler;
+const int ny = 100 * size_multipler;
+const int subPixelCount = 100 * size_multipler * size_multipler;
 const int max_depth = 50;
 
 // x : -2  ~  2
@@ -105,6 +115,8 @@ void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Funct
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
 	std::ofstream out("1.ppm");
 	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
 	std::cout.rdbuf(out.rdbuf()); //redirect std::cout
