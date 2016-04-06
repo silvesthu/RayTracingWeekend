@@ -10,11 +10,12 @@ struct hit_record
 	hit_record()
 	{
 		mat_ptr = nullptr;
+		t = 0;
 	}
 
 	float t;
 	vec3 p;
-	vec3 normal;
+	vec3 normal; // should filled with normalized normal
 	material *mat_ptr;
 };
 

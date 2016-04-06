@@ -34,8 +34,15 @@ using namespace concurrency;
 
 const int nx = 200 * size_multipler;
 const int ny = 100 * size_multipler;
-const int subPixelCount = 100 * size_multipler * size_multipler;
+const int subPixelCount = 100 * size_multipler;
+
+//#define DEBUG_RAY
+
+#ifdef DEBUG_RAY
+const int max_depth = 1;
+#else
 const int max_depth = 50;
+#endif
 
 // x : -2  ~  2
 // y : -1  ~  1
@@ -51,10 +58,14 @@ vec3 color(const ray& r, hitable *world, int depth)
 		ray scattered;
 		vec3 attenuation;
 
+		//return normalize(rec.p);
+
 		// * Bounce and reflect depending on material
 		if (depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
 		{
 			return attenuation * color(scattered, world, depth + 1);
+
+			//return normalize(rec.normal) * 0.5f + 0.5f;
 		}
 		else
 		{
@@ -123,21 +134,37 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	std::cout << "P3\n" << nx << " " << ny << "\n255\n";
 
-	vec3 lower_left_cornor(-2.0f, -1.0f, -1.0f);
-	vec3 horizontal(4.0f, 0.0f, 0.0f);
-	vec3 vertical(0.0f, 2.0f, 0.0f);
-	vec3 origin(0.0f, 0.0f, 0.0f);
+	// Debug Scene
+	//std::unique_ptr<hitable> list[] =
+	//{
+	//	std::make_unique<sphere>(vec3(0, 0, -1), 0.5f,
+	//		std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f))
+	//};
 
+	// Metal scene
+	//std::unique_ptr<hitable> list[] =
+	//{
+	//	std::make_unique<sphere>(vec3(0, 0, -1), 0.5f, 
+	//		std::make_unique<lambertian>(vec3(0.8f, 0.3f, 0.3f))),
+	//	std::make_unique<sphere>(vec3(0, -100.5f, -1), 100.0f, 
+	//		std::make_unique<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
+	//	std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
+	//		std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 1.0f)),
+	//	std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
+	//		std::make_unique<metal>(vec3(0.8f, 0.8f, 0.8f), 0.3f))
+	//};
+	
+	// Dielectric scene
 	std::unique_ptr<hitable> list[] =
 	{
 		std::make_unique<sphere>(vec3(0, 0, -1), 0.5f, 
-			std::make_unique<lambertian>(vec3(0.8f, 0.3f, 0.3f))),
+			std::make_unique<lambertian>(vec3(0.1f, 0.2f, 0.5f))),
 		std::make_unique<sphere>(vec3(0, -100.5f, -1), 100.0f, 
 			std::make_unique<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
 		std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
-			std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 1.0f)),
+			std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)),
 		std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
-			std::make_unique<metal>(vec3(0.8f, 0.8f, 0.8f), 0.3f))
+			std::make_unique<dielectric>(1.5f))
 	};
 
 	hitable_list world(list, ARRAY_SIZE(list));
@@ -160,9 +187,13 @@ int _tmain(int argc, _TCHAR* argv[])
 					float u = float(i + uniform(engine)) / float(nx);
 					float v = float(j + uniform(engine)) / float(ny);
 
+#ifdef DEBUG_RAY
+					// DEBUG_RAY
+					u = v = 0.5f;
+#endif
+
 					// trace
 					ray r = cam.get_ray(u, v);
-					vec3 p = r.point_at_parameter(2.0f);
 					subPixels[s] = color(r, &world, 0);
 				});
 

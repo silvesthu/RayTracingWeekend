@@ -18,6 +18,7 @@ using namespace concurrency;
 
 #include "../RayTracingWeekend/vec3.h"
 #include "../RayTracingWeekend/ray.h"
+#include "../RayTracingWeekend/material.h"
 
 // just some simple test to avoid typo
 TEST(vec3Test, size) 
@@ -63,6 +64,21 @@ TEST(RandomTest, Random)
 	std::uniform_real_distribution<float> distribution(0.0, 1.0);
 	ASSERT_EQ(distribution.min(), 0.0f);
 	ASSERT_EQ(distribution.max(), 1.0f);
+}
+
+TEST(VectorTest, Refract)
+{
+	vec3 refracted;
+	auto result = refract(vec3(0, 0, 1), vec3(0, 0, -1), 1, refracted);
+	ASSERT_TRUE(result);
+	ASSERT_EQ(refracted.x, 0);
+	ASSERT_EQ(refracted.y, 0);
+	ASSERT_EQ(refracted.z, 1);
+	result = refract(vec3(1, 1, 1), vec3(0, 0, -1), 1, refracted);
+	ASSERT_TRUE(result);
+	ASSERT_EQ(refracted.x, 1);
+	ASSERT_EQ(refracted.y, 1);
+	ASSERT_EQ(refracted.z, 1);
 }
 
 int _tmain(int argc, _TCHAR* argv[])

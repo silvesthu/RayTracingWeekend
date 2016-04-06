@@ -40,16 +40,10 @@ public:
 	};	
 };
 
-inline vec3 operator+(const vec3& v1, const vec3& v2) { 
-	vec3 copy = v1; 
-	copy.x += v2.x; copy.y += v2.y; copy.z += v2.z; 
-	return copy; }
-inline vec3 operator-(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy.x -= v2.x; copy.y -= v2.y; copy.z -= v2.z; return copy; }
-inline vec3 operator*(const vec3& v1, const vec3& v2) { 
-	vec3 copy = v1; 
-	copy.x *= v2.x; copy.y *= v2.y; copy.z *= v2.z; 
-	return copy; }
-inline vec3 operator/(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy.x /= v2.x; copy.y /= v2.y; copy.z /= v2.z; return copy; }
+inline vec3 operator+(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy += v2; return copy; }
+inline vec3 operator-(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy -= v2; return copy; }
+inline vec3 operator*(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy *= v2; return copy; }
+inline vec3 operator/(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy /= v2; return copy; }
 
 inline float dot(const vec3& v1, const vec3& v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z; }
 
