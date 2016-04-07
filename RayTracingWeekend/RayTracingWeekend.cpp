@@ -58,14 +58,10 @@ vec3 color(const ray& r, hitable *world, int depth)
 		ray scattered;
 		vec3 attenuation;
 
-		//return normalize(rec.p);
-
 		// * Bounce and reflect depending on material
 		if (depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
 		{
 			return attenuation * color(scattered, world, depth + 1);
-
-			//return normalize(rec.normal) * 0.5f + 0.5f;
 		}
 		else
 		{
@@ -155,6 +151,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	//};
 	
 	// Dielectric scene
+	//std::unique_ptr<hitable> list[] =
+	//{
+	//	std::make_unique<sphere>(vec3(0, 0, -1), 0.5f, 
+	//		std::make_unique<lambertian>(vec3(0.1f, 0.2f, 0.5f))),
+	//	std::make_unique<sphere>(vec3(0, -100.5f, -1), 100.0f, 
+	//		std::make_unique<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
+	//	std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
+	//		std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)),
+	//	std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
+	//		std::make_unique<dielectric>(1.5f))
+	//};
+
+	// Dielectric scene - schlick
 	std::unique_ptr<hitable> list[] =
 	{
 		std::make_unique<sphere>(vec3(0, 0, -1), 0.5f, 
@@ -164,6 +173,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
 			std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)),
 		std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
+			std::make_unique<dielectric>(1.5f)),
+		std::make_unique<sphere>(vec3(-1, 0, -1), -0.45f,
 			std::make_unique<dielectric>(1.5f))
 	};
 

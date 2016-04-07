@@ -36,7 +36,8 @@ inline bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refrac
 	if (discriminant > 0)
 	{
 		// refracted = ???
-		refracted = ni_over_nt * (v - n * dt) - n * sqrt(discriminant);
+		// don't forget to use normalized uv !!!
+		refracted = ni_over_nt * (uv - n * dt) - n * sqrt(discriminant);
 		return true;
 	}
 	else
@@ -44,6 +45,16 @@ inline bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refrac
 		// total internal reflection
 		return false;
 	}
+}
+
+// the schlick approximation for fresnel factor (specular reflection coefficient)
+// R(theta) = R0 + (1 - R0)(1- cos(theta)) ^ 5
+// R0 = ((n1 - n2) / (n1 + n2)) ^ 2
+inline float schlick(float cosine, float ref_idx)
+{
+	float r0 = (1 - ref_idx) / (1 + ref_idx);
+	r0 = r0 * r0;
+	return r0 + (1 - r0) * pow((1 - cosine), 5);
 }
 
 class material
@@ -93,34 +104,51 @@ public:
 	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
 	{
 		attenuation = vec3(1.0f, 1.0f, 1.0f); // reflect / refract all
-
-		// don't forget to normalize !!!
-		vec3 normalizedDirection = normalize(r_in.direction());
 				
 		vec3 outward_normal;
 		float ni_over_nt;
-		if (dot(normalizedDirection, rec.normal) > 0)
+		float cosine;
+		if (dot(r_in.direction(), rec.normal) > 0)
 		{
 			outward_normal = -rec.normal;
 			ni_over_nt = ref_idx;
+
+			// why need ref_idx here ?
+			cosine = ref_idx * dot(r_in.direction(), rec.normal) / r_in.direction().length();
 		}
 		else
 		{
 			outward_normal = rec.normal;
 			ni_over_nt = 1.0f / ref_idx;
+			cosine = -dot(r_in.direction(), rec.normal) / r_in.direction().length();
 		}
 
+		vec3 reflected = reflect(r_in.direction(), rec.normal);
 		vec3 refracted;
-		if (refract(normalizedDirection, outward_normal, ni_over_nt, refracted))
+		float reflect_prob; // probability
+		if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
 		{
-			// refraction
-			scattered = ray(rec.p, refracted);
+			// refraction or reflection			
+			reflect_prob = schlick(cosine, ref_idx);
 		}
 		else
 		{
 			// total internal reflection
-			vec3 reflected = reflect(-normalizedDirection, rec.normal);
 			scattered = ray(rec.p, reflected);
+			reflect_prob = 1.0f;
+		}
+
+		static std::uniform_real<float> uniform;
+		static std::minstd_rand engine;
+
+		auto rand = uniform(engine);
+		if (rand < reflect_prob)
+		{
+			scattered = ray(rec.p, reflected);
+		} 
+		else
+		{
+			scattered = ray(rec.p, refracted);
 		}
 
 		return true;
