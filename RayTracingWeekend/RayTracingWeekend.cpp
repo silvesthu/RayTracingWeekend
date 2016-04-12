@@ -7,6 +7,8 @@
 #include <chrono>
 #include <random>
 #include <algorithm>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
@@ -29,7 +31,7 @@ using namespace concurrency;
 #ifdef _DEBUG
 	const int size_multipler = 1;
 #else
-	const int size_multipler = 2;
+	const int size_multipler = 1;
 #endif
 
 const int nx = 200 * size_multipler;
@@ -164,22 +166,99 @@ int _tmain(int argc, _TCHAR* argv[])
 	//};
 
 	// Dielectric scene - schlick
-	std::unique_ptr<hitable> list[] =
-	{
-		std::make_unique<sphere>(vec3(0, 0, -1), 0.5f, 
-			std::make_unique<lambertian>(vec3(0.1f, 0.2f, 0.5f))),
-		std::make_unique<sphere>(vec3(0, -100.5f, -1), 100.0f, 
-			std::make_unique<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
-		std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
-			std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)),
-		std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
-			std::make_unique<dielectric>(1.5f)),
-		std::make_unique<sphere>(vec3(-1, 0, -1), -0.45f,
-			std::make_unique<dielectric>(1.5f))
-	};
+	//std::unique_ptr<hitable> list[] =
+	//{
+	//	std::make_unique<sphere>(vec3(0, 0, -1), 0.5f, 
+	//		std::make_unique<lambertian>(vec3(0.1f, 0.2f, 0.5f))),
+	//	std::make_unique<sphere>(vec3(0, -100.5f, -1), 100.0f, 
+	//		std::make_unique<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
+	//	std::make_unique<sphere>(vec3(1, 0, -1), 0.5f,
+	//		std::make_unique<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)),
+	//	std::make_unique<sphere>(vec3(-1, 0, -1), 0.5f,
+	//		std::make_unique<dielectric>(1.5f)),
+	//	std::make_unique<sphere>(vec3(-1, 0, -1), -0.45f,
+	//		std::make_unique<dielectric>(1.5f))
+	//};
 
-	hitable_list world(list, ARRAY_SIZE(list));
-	camera cam;
+	// Camera test scene
+	//float R = cos((float)M_PI / 4.0f);
+	//std::unique_ptr<hitable> list[] =
+	//{
+	//	std::make_unique<sphere>(vec3(-R, 0, -1), R, 
+	//		std::make_unique<lambertian>(vec3(0, 0, 1))),
+	//	std::make_unique<sphere>(vec3(R, 0, -1), R, 
+	//		std::make_unique<lambertian>(vec3(1, 0, 0)))
+	//};
+
+	//int n = ARRAY_SIZE(list);
+
+	// Random scene
+	const int n = 480 + 1 + 3;
+	std::unique_ptr<hitable> list[n];
+	{
+		// The ground
+		list[0] = std::make_unique<sphere>(vec3(0, -1000, 0), 1000.0f, std::make_unique<lambertian>(vec3(0.5f, 0.5f, 0.5f)));
+
+		std::uniform_real<float> scene_uniform;
+		std::minstd_rand scene_engine;
+
+		auto rand = [&](){ return scene_uniform(scene_engine); };
+
+		int i = 1;
+		for (int a = -11; a < 11; a++)
+		{
+			for (int b = -11; b < 11; b++)
+			{
+				float choose_mat = rand();
+				vec3 center(a + 0.9f * rand(), 0.2f, b + 0.9f * rand());
+				if ((center - vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f)
+				{
+					if (choose_mat < 0.8f) // diffuse
+					{
+						vec3 color;
+						color.r = rand() * rand();
+						color.g = rand() * rand();
+						color.b = rand() * rand();
+						list[i++] = std::make_unique<sphere>(center, 0.2f, std::make_unique<lambertian>(color));
+					} 
+					else
+					{
+						if (choose_mat < 0.95) // metal
+						{
+							vec3 color;
+							color.r = 0.5f * (1 + rand());
+							color.g = 0.5f * (1 + rand());
+							color.b = 0.5f * (1 + rand());
+							float fuzz = 0.5f * rand();
+							list[i++] = std::make_unique<sphere>(center, 0.2f, std::make_unique<metal>(color, fuzz));
+						}
+						else // glass
+						{
+							vec3 color;
+							float ref_idx = 1.5f;
+							list[i++] = std::make_unique<sphere>(center, 0.2f, std::make_unique<dielectric>(ref_idx));
+						}
+					}
+				}
+			}
+		}
+
+		list[i++] = std::make_unique<sphere>(vec3(0,1,0), 1.0f, std::make_unique<dielectric>(1.5f));
+		list[i++] = std::make_unique<sphere>(vec3(-4,1,0), 1.0f, std::make_unique<lambertian>(vec3(0.4f, 0.2f, 0.1f)));
+		list[i++] = std::make_unique<sphere>(vec3(4,1,0), 1.0f, std::make_unique<metal>(vec3(0.7f, 0.6f, 0.5f), 0.0f));
+	}	
+
+	hitable_list world(list, n);
+	//vec3 lookfrom(-2, 2, 1); // before defocus
+	//vec3 lookfrom(3, 3, 2); // defocus
+	//vec3 lookat(0, 0, -1);
+
+	vec3 lookfrom(12, 2, 3);
+	vec3 lookat(0, 0.5f, 0);
+	float dist_to_focus = (lookfrom - lookat).length();
+	float aperture = 2.0f;
+	float vfov = 20.0f;
+	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus);
 
 	std::uniform_real<float> uniform;
 	std::minstd_rand engine;
