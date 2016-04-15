@@ -18,9 +18,9 @@ public:
 		float half_width = aspect * half_height;
 
 		origin = lookfrom;
-		vec3 w = normalize(lookfrom - lookat);
-		vec3 u = normalize(cross(vup, w));
-		vec3 v = cross(w, u);
+		w = normalize(lookfrom - lookat);
+		u = normalize(cross(vup, w));
+		v = cross(w, u);
 		
 		lower_left_corner = origin - half_width * focus_dist *  u - half_height * focus_dist * v - focus_dist * w;
 		
@@ -28,26 +28,25 @@ public:
 		vertical = 2.0f * half_height * focus_dist * v;		
 	}
 
-	ray get_ray(float u, float v)
+	ray get_ray(float s, float t)
 	{
 		vec3 rd = lens_radius * random_in_unit_disk();
 		vec3 offset = u * rd.x + v * rd.y;
 
-		offset = vec3(0, 0, 0); // test : no offset
-
+		auto dir = lower_left_corner
+			+ s * horizontal
+			+ t * vertical
+			- origin
+			- offset;
 		return ray(origin + offset, 
-			lower_left_corner 
-			+ u * horizontal 
-			+ v * vertical 
-			- origin 
-			- offset);
+			normalize(dir));
 	}
 
 	vec3 origin;
 	vec3 lower_left_corner;
 	vec3 horizontal;
 	vec3 vertical;
-
+	vec3 u, v, w;
 	float lens_radius;
 
 private:

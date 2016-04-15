@@ -30,13 +30,15 @@ using namespace concurrency;
 
 #ifdef _DEBUG
 	const int size_multipler = 1;
+	const int subPixel_count = 5;
 #else
-	const int size_multipler = 1;
+	const int size_multipler = 2;
+	const int subPixel_count = 100;
 #endif
 
 const int nx = 200 * size_multipler;
 const int ny = 100 * size_multipler;
-const int subPixelCount = 100 * size_multipler;
+const int subPixelCount = subPixel_count * size_multipler;
 
 //#define DEBUG_RAY
 
@@ -256,7 +258,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	vec3 lookfrom(12, 2, 3);
 	vec3 lookat(0, 0.5f, 0);
 	float dist_to_focus = (lookfrom - lookat).length();
-	float aperture = 2.0f;
+	float aperture = 0.2f;
 	float vfov = 20.0f;
 	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus);
 
