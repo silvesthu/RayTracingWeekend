@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
-#include <amp.h>                // C++ AMP header file
+#include <ppl.h>
 using namespace concurrency;
 
 #undef min
@@ -121,7 +121,7 @@ template <typename _Index_type, typename _Function>
 void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Function& _Func)
 {
 	//serial_for(_First, _Last, _Step, _Func);
-	parallel_for(_First, _Last, _Step, _Func);
+	Concurrency::parallel_for(_First, _Last, _Step, _Func);
 }
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -296,7 +296,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				}
 
 				// to gamma 2
-				auto col = sum / subPixelCount;
+				auto col = sum / static_cast<float>(subPixelCount);
 				col = vec3(sqrt(col.x), sqrt(col.y), sqrt(col.z));
 
 				// save to canvas
