@@ -33,7 +33,7 @@ using namespace concurrency;
 	const int subPixel_count = 5;
 #else
 	const int size_multipler = 2;
-	const int subPixel_count = 100;
+	const int subPixel_count = 50;
 #endif
 
 const int nx = 200 * size_multipler;
@@ -204,6 +204,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::uniform_real<float> scene_uniform;
 		std::minstd_rand scene_engine;
 
+		std::uniform_real<float> time_uniform;
+		std::minstd_rand time_engine;
+
 		auto rand = [&](){ return scene_uniform(scene_engine); };
 
 		int i = 1;
@@ -221,7 +224,13 @@ int _tmain(int argc, _TCHAR* argv[])
 						color.r = rand() * rand();
 						color.g = rand() * rand();
 						color.b = rand() * rand();
-						list[i++] = std::make_unique<sphere>(center, 0.2f, std::make_unique<lambertian>(color));
+						list[i++] = std::make_unique<moving_sphere>(center, 0.2f, std::make_unique<lambertian>(color));
+
+						moving_strategy s;
+						s.center1 = center + vec3(0.0f, 0.5f * time_uniform(time_engine), 0.0f);
+						s.time0 = 0.0f;
+						s.time1 = 1.0f;
+						static_cast<moving_sphere*>(list[i - 1].get())->update_strategy(s);
 					} 
 					else
 					{
@@ -260,7 +269,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	float dist_to_focus = (lookfrom - lookat).length();
 	float aperture = 0.2f;
 	float vfov = 20.0f;
-	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus);
+	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0f, 1.0f);
 
 	std::uniform_real<float> uniform;
 	std::minstd_rand engine;
