@@ -5,9 +5,6 @@
 
 #pragma once
 
-#undef min
-#undef max
-
 #include "targetver.h"
 
 // Headers for CppUnitTest

@@ -1,6 +1,8 @@
 // RayTracingWeekend.cpp : Defines the entry point for the console application.
 //
 
+#define NOMINMAX
+
 #include <tchar.h>
 #include <iostream>
 #include <fstream>
@@ -17,8 +19,6 @@
 #include <ppl.h>
 using namespace concurrency;
 
-#undef min
-#undef max
 #define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 #include "vec3.h"

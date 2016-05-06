@@ -58,11 +58,38 @@ namespace CppTest
 	TEST_CLASS(_random)
 	{
 	public:
-		TEST_METHOD(_reduce)
+		TEST_METHOD(_uniform)
 		{
 			std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
 			Assert::AreEqual(distribution.min(), 0.0f);
 			Assert::AreEqual(distribution.max(), 1.0f);
+		}
+	};
+
+	TEST_CLASS(_aabb)
+	{
+	public:
+		TEST_METHOD(_hit)
+		{
+			Assert::IsTrue(
+				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
+					ray(vec3(0,0,0), vec3(1,1,1)), 0, FLT_MAX));
+
+			Assert::IsFalse(
+				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
+					ray(vec3(0, 0, 0), -vec3(1, 1, 1)), 0, FLT_MAX));
+
+			Assert::IsTrue(
+				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
+					ray(vec3(3, 3, 3), vec3(0, 1, 0)), 0, FLT_MAX));
+
+			Assert::IsTrue(
+				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
+					ray(vec3(0, 3, 0), vec3(1, 0, 1)), 0, FLT_MAX));
+
+			Assert::IsFalse(
+				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
+					ray(vec3(0, 5, 0), vec3(1, 0, 1)), 0, FLT_MAX));
 		}
 	};
 }
