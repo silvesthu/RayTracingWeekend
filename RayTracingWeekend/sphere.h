@@ -5,17 +5,31 @@
 
 struct trivial_strategy
 {
-	vec3 center(const vec3& c, float time) const
+	vec3 center(const vec3& center0, float time) const
 	{
-		return c;
+		return center0;
+	}
+
+	bool bounding_box(const vec3& center0, float radius, float t0, float t1, aabb& box) const
+	{
+		box = aabb(center0 - vec3(radius, radius, radius), center0 + vec3(radius, radius, radius));
+		return true;
 	}
 };
 
 struct moving_strategy
 {
-	vec3 center(const vec3& c, float time) const
+	vec3 center(const vec3& center0, float time) const
 	{
-		return c + ((time - time0) / (time1 - time0)) * (center1 - c);
+		return center0 + ((time - time0) / (time1 - time0)) * (center1 - center0);
+	}
+
+	bool bounding_box(const vec3& center0, float radius, float t0, float t1, aabb& box) const
+	{
+		auto box0 = aabb(center0 - vec3(radius, radius, radius), center0 + vec3(radius, radius, radius));
+		auto box1 = aabb(center1 - vec3(radius, radius, radius), center1 + vec3(radius, radius, radius));
+		box = aabb::surrounding(box0, box1);
+		return true;
 	}
 
 	vec3 center1;
@@ -63,12 +77,17 @@ public:
 
 		return false;
 	}
+
+	virtual bool bounding_box(float t0, float t1, aabb& box) const
+	{
+		return strategy.bounding_box(center, radius, t0, t1, box);
+	}
 	
 	void update_strategy(const Strategy& s)
 	{
 		strategy = s;
 	}
-
+	
 	vec3 center;
 	float radius;
 	std::unique_ptr<material> mat;

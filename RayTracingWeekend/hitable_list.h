@@ -23,6 +23,11 @@ public:
 		return hit_anything;
 	}
 
+	virtual bool bounding_box(float t0, float t1, aabb& box) const
+	{
+		return true;
+	}
+
 	std::unique_ptr<hitable>* list;
 	int list_size;
 };

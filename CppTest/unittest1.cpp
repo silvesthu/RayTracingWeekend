@@ -91,5 +91,21 @@ namespace CppTest
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
 					ray(vec3(0, 5, 0), vec3(1, 0, 1)), 0, FLT_MAX));
 		}
+
+		TEST_METHOD(_surrounding)
+		{
+			aabb box0(vec3(0, 0, 0), vec3(1, 1, 1));
+			aabb box1(vec3(3, 3, 3), vec3(4, 4, 4));
+
+			auto s = aabb::surrounding(box0, box1);
+
+			Assert::AreEqual(s.min()[0], 0.0f);
+			Assert::AreEqual(s.min()[1], 0.0f);
+			Assert::AreEqual(s.min()[2], 0.0f);
+
+			Assert::AreEqual(s.max()[0], 4.0f);
+			Assert::AreEqual(s.max()[1], 4.0f);
+			Assert::AreEqual(s.max()[2], 4.0f);
+		}
 	};
 }

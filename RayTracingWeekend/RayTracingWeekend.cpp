@@ -33,7 +33,7 @@ using namespace concurrency;
 	const int subPixel_count = 5;
 #else
 	const int size_multipler = 2;
-	const int subPixel_count = 50;
+	const int subPixel_count = 5;
 #endif
 
 const int nx = 200 * size_multipler;
@@ -199,16 +199,18 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::unique_ptr<hitable> list[n];
 	{
 		// The ground
-		list[0] = std::make_unique<sphere>(vec3(0, -1000, 0), 1000.0f, std::make_unique<lambertian>(vec3(0.5f, 0.5f, 0.5f)));
+		std::unique_ptr<texture> groundAlbedo0 = std::make_unique<constant_texture>(vec3(0.2f, 0.3f, 0.1f));
+		std::unique_ptr<texture> groundAlbedo1 = std::make_unique<constant_texture>(vec3(0.9f, 0.9f, 0.9f));
+		std::unique_ptr<texture> groundAlbedo = std::make_unique<checker_texture>(groundAlbedo0, groundAlbedo1);
+		list[0] = std::make_unique<sphere>(vec3(0, -1000, 0), 1000.0f, std::make_unique<lambertian>(groundAlbedo));
 
 		std::uniform_real<float> scene_uniform;
 		std::minstd_rand scene_engine;
-
 		std::uniform_real<float> time_uniform;
 		std::minstd_rand time_engine;
 
+		// Small ones
 		auto rand = [&](){ return scene_uniform(scene_engine); };
-
 		int i = 1;
 		for (int a = -11; a < 11; a++)
 		{
@@ -224,7 +226,8 @@ int _tmain(int argc, _TCHAR* argv[])
 						color.r = rand() * rand();
 						color.g = rand() * rand();
 						color.b = rand() * rand();
-						list[i++] = std::make_unique<moving_sphere>(center, 0.2f, std::make_unique<lambertian>(color));
+						std::unique_ptr<texture> albedo = std::make_unique<constant_texture>(color);
+						list[i++] = std::make_unique<moving_sphere>(center, 0.2f, std::make_unique<lambertian>(albedo));
 
 						moving_strategy s;
 						s.center1 = center + vec3(0.0f, 0.5f * time_uniform(time_engine), 0.0f);
@@ -254,8 +257,10 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 		}
 
+		// Big ones
 		list[i++] = std::make_unique<sphere>(vec3(0,1,0), 1.0f, std::make_unique<dielectric>(1.5f));
-		list[i++] = std::make_unique<sphere>(vec3(-4,1,0), 1.0f, std::make_unique<lambertian>(vec3(0.4f, 0.2f, 0.1f)));
+		std::unique_ptr<texture> albedo = std::make_unique<constant_texture>(vec3(0.4f, 0.2f, 0.1f));
+		list[i++] = std::make_unique<sphere>(vec3(-4,1,0), 1.0f, std::make_unique<lambertian>(albedo));
 		list[i++] = std::make_unique<sphere>(vec3(4,1,0), 1.0f, std::make_unique<metal>(vec3(0.7f, 0.6f, 0.5f), 0.0f));
 	}	
 
