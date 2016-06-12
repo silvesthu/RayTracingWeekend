@@ -29,7 +29,7 @@ class checker_texture : public texture
 {
 public:
 	checker_texture() {}
-	checker_texture(std::unique_ptr<texture>& t0, std::unique_ptr<texture>& t1) : even(std::move(t0)), odd(std::move(t1)) {}
+	checker_texture(std::shared_ptr<texture>& t0, std::shared_ptr<texture>& t1) : even(t0), odd(t1) {}
 
 	virtual vec3 value(float u, float v, const vec3& p) const
 	{
@@ -44,6 +44,6 @@ public:
 		}
 	}
 
-	std::unique_ptr<texture> odd;
-	std::unique_ptr<texture> even;
+	std::shared_ptr<texture> odd;
+	std::shared_ptr<texture> even;
 };

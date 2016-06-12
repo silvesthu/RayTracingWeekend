@@ -42,7 +42,7 @@ class sphere_base : public hitable
 {
 public:
 	sphere_base() : center(0, 0, 0), radius(0), mat(nullptr) {}
-	sphere_base(vec3 cen, float r, std::unique_ptr<material> m) : center(cen), radius(r), mat(std::move(m)) {}
+	sphere_base(vec3 cen, float r, std::shared_ptr<material> m) : center(cen), radius(r), mat(m) {}
 	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
 	{
 		vec3 currentCenter = strategy.center(center, r.time());
@@ -90,7 +90,7 @@ public:
 	
 	vec3 center;
 	float radius;
-	std::unique_ptr<material> mat;
+	std::shared_ptr<material> mat;
 	Strategy strategy;
 };
 

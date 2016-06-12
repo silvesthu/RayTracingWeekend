@@ -69,7 +69,7 @@ public:
 class lambertian : public material
 {
 public:
-	explicit lambertian(std::unique_ptr<texture>& a) : albedo(std::move(a)) {}
+	explicit lambertian(std::shared_ptr<texture>& a) : albedo(a) {}
 	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
 	{
 		// reflected ray goes to random direction
@@ -79,7 +79,7 @@ public:
 		return true;
 	}
 
-	std::unique_ptr<texture> albedo;
+	std::shared_ptr<texture> albedo;
 };
 
 class metal : public material
