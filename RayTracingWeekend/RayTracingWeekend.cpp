@@ -33,7 +33,7 @@ using namespace concurrency;
 	const int subPixel_count = 5;
 #else
 	const int size_multipler = 2;
-	const int subPixel_count = 5;
+	const int subPixel_count = 10;
 #endif
 
 const int nx = 200 * size_multipler;
@@ -47,6 +47,14 @@ const int max_depth = 1;
 #else
 const int max_depth = 50;
 #endif
+
+enum class RenderType
+{
+	Shaded,
+	Normal,
+};
+
+RenderType s_renderType = RenderType::Shaded;
 
 // x : -2  ~  2
 // y : -1  ~  1
@@ -62,28 +70,22 @@ vec3 color(const ray& r, hitable *world, int depth)
 		ray scattered;
 		vec3 attenuation;
 
-		// * Bounce and reflect depending on material
-		if (depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+		switch (s_renderType)
 		{
-			return attenuation * color(scattered, world, depth + 1);
-		}
-		else
-		{
-			return vec3(0, 0, 0);
-		}
-
-		// * Show normal
-		{
-			// return 0.5f * (rec.normal + 1); 
-		}
-		
-
-		// * Bounce towards unit sphere above first contact point
-		{
-			// vec3 random_vector;// = random_in_unit_sphere();
-			// vec3 target = rec.p + rec.normal + random_vector;
-			// return 0.5f * color(ray(rec.p, target - rec.p), world); // what if bounce never end ? need a limit here
-		}		
+		case RenderType::Shaded:
+			if (depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+			{
+				return attenuation * color(scattered, world, depth + 1);
+			}
+			else
+			{
+				return vec3(0, 0, 0);
+			}
+		case RenderType::Normal:
+			return 0.5f * (rec.normal + 1);
+		default:
+			return vec3();
+		}	
 	}
 	else
 	{
@@ -265,16 +267,26 @@ int _tmain(int argc, _TCHAR* argv[])
 	//}
 
 
-	// 2-Sphere scene
+	// 2 sphere scene
+	//const int n = 2;
+	//std::shared_ptr<hitable> list[n];
+	//{
+	//	std::shared_ptr<texture> a = std::make_shared<constant_texture>(vec3(0.2f, 0.3f, 0.1f));
+	//	std::shared_ptr<texture> b = std::make_shared<constant_texture>(vec3(0.9f, 0.9f, 0.9f));
+	//	std::shared_ptr<texture> checker = std::make_shared<checker_texture>(a, b);
+
+	//	list[0] = std::make_shared<sphere>(vec3(0.0f, -10.0f, 0.0f), 10.0f, std::make_shared<lambertian>(checker));
+	//	list[1] = std::make_shared<sphere>(vec3(0.0f,  10.0f, 0.0f), 10.0f, std::make_shared<lambertian>(checker));
+	//}
+
+	// 2 perlin sphere scene
 	const int n = 2;
 	std::shared_ptr<hitable> list[n];
 	{
-		std::shared_ptr<texture> a = std::make_shared<constant_texture>(vec3(0.2f, 0.3f, 0.1f));
-		std::shared_ptr<texture> b = std::make_shared<constant_texture>(vec3(0.9f, 0.9f, 0.9f));
-		std::shared_ptr<texture> checker = std::make_shared<checker_texture>(a, b);
+		std::shared_ptr<texture> noise = std::make_shared<noise_texture>();
 
-		list[0] = std::make_shared<sphere>(vec3(0.0f, -10.0f, 0.0f), 10.0f, std::make_shared<lambertian>(checker));
-		list[1] = std::make_shared<sphere>(vec3(0.0f,  10.0f, 0.0f), 10.0f, std::make_shared<lambertian>(checker));
+		list[0] = std::make_shared<sphere>(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<lambertian>(noise));
+		list[1] = std::make_shared<sphere>(vec3(0.0f,  2.0f, 0.0f), 2.0f, std::make_shared<lambertian>(noise));
 	}
 
 	hitable_list world(list, n);

@@ -5,6 +5,7 @@
 
 #include "vec3.h"
 #include "ray.h"
+#include "noise.h"
 
 class texture
 {
@@ -46,4 +47,25 @@ public:
 
 	std::shared_ptr<texture> odd;
 	std::shared_ptr<texture> even;
+};
+
+class noise_texture : public texture
+{
+public:
+	noise_texture() : scale(5.f) {}
+	noise_texture(float sc) : scale(sc) {}
+	virtual vec3 value(float u, float v, const vec3& p) const
+	{
+		// static std::uniform_real<float> uniform;
+		// static std::minstd_rand engine;
+		// return vec3(1, 1, 1) * uniform(engine);
+
+		// return vec3(1, 1, 1) * (noise.noise(scale * p) + 1.0f) * 0.5f;
+
+		// return vec3(1, 1, 1) * noise.turb(scale * p);
+
+		return vec3(1, 1, 1) * 0.5f * (1 + sin(scale * p.z + 10 * noise.turb(p)));
+	}
+	perlin noise;
+	float scale;
 };

@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <algorithm>
 
 class vec3
 {
@@ -60,6 +61,20 @@ inline vec3 normalize(const vec3& v)
 	float length = copy.length();
 	copy /= length;
 	return copy; 
+}
+
+inline float clamp(const float& x, const float& min, const float& max)
+{
+	return std::max(std::min(x, max), min);
+}
+
+inline vec3 clamp(const vec3& v, const vec3& min, const vec3& max)
+{
+	vec3 r = v;
+	r.x = clamp(v.x, min.x, max.x);
+	r.y = clamp(v.y, min.y, max.y);
+	r.z = clamp(v.z, min.z, max.z);
+	return r;
 }
 
 inline vec3 lerp(vec3 from, vec3 to, float t)
