@@ -69,3 +69,31 @@ public:
 	perlin noise;
 	float scale;
 };
+
+class image_texture : public texture
+{
+public:
+	typedef unsigned char byte;
+	typedef std::vector<byte> byte_array;
+
+	image_texture() {}
+	image_texture(std::shared_ptr<byte_array> pixels, int A, int B) : data(pixels), nx(A), ny(B) {}
+	virtual vec3 value(float u, float v, const vec3& p) const
+	{
+		int i = (int)(u * nx);
+		int j = (int)((1 - v) * ny - 0.001f); // ?
+
+		i = clamp(i, 0, nx - 1);
+		j = clamp(j, 0, nx - 1);
+
+		float r = int((*data)[3 * i + 3 * nx * j]) / 255.0f;
+		float g = int((*data)[3 * i + 3 * nx * j + 1]) / 255.0f;
+		float b = int((*data)[3 * i + 3 * nx * j + 2]) / 255.0f;
+
+		return vec3(r, g, b);
+	}
+
+	std::shared_ptr<byte_array> data;
+	int nx;
+	int ny;
+};

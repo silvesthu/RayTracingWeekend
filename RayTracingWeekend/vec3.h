@@ -1,5 +1,7 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
@@ -63,7 +65,8 @@ inline vec3 normalize(const vec3& v)
 	return copy; 
 }
 
-inline float clamp(const float& x, const float& min, const float& max)
+template <typename T>
+inline T clamp(const T& x, const T& min, const T& max)
 {
 	return std::max(std::min(x, max), min);
 }
