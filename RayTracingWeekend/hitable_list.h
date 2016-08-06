@@ -6,7 +6,7 @@ class hitable_list : public hitable {
 public:
 	hitable_list() {}
 	hitable_list(std::shared_ptr<hitable>*l, int n) { list = l; list_size = n; }
-	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
+	bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
 	{
 		hit_record temp_rec;
 		bool hit_anything = false;
@@ -23,7 +23,7 @@ public:
 		return hit_anything;
 	}
 
-	virtual bool bounding_box(float t0, float t1, aabb& box) const
+	bool bounding_box(float t0, float t1, aabb& box) const override
 	{
 		return true;
 	}

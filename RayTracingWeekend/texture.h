@@ -18,7 +18,7 @@ class constant_texture : public texture
 public:
 	constant_texture() {}
 	constant_texture(vec3 c) : color(c) {}
-	virtual vec3 value(float u, float v, const vec3& p) const
+	vec3 value(float u, float v, const vec3& p) const override
 	{
 		return color;
 	}
@@ -30,9 +30,9 @@ class checker_texture : public texture
 {
 public:
 	checker_texture() {}
-	checker_texture(std::shared_ptr<texture>& t0, std::shared_ptr<texture>& t1) : even(t0), odd(t1) {}
+	checker_texture(std::shared_ptr<texture>& t0, std::shared_ptr<texture>& t1) : odd(t1), even(t0) {}
 
-	virtual vec3 value(float u, float v, const vec3& p) const
+	vec3 value(float u, float v, const vec3& p) const override
 	{
 		float sines = std::sin(10.0f * p.x) * std::sin(10.0f * p.y) * std::sin(10.0f * p.z);
 		if (sines < 0)

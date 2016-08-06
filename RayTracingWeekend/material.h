@@ -7,7 +7,7 @@
 
 inline vec3 random_in_unit_sphere()
 {
-	static std::uniform_real<float> uniform;
+	static std::uniform_real_distribution<float> uniform;
 	static std::minstd_rand engine;
 
 	vec3 p = { 0, 0, 0 };
@@ -140,7 +140,7 @@ public:
 			reflect_prob = 1.0f;
 		}
 
-		static std::uniform_real<float> uniform;
+		static std::uniform_real_distribution<float> uniform;
 		static std::minstd_rand engine;
 
 		auto rand = uniform(engine);

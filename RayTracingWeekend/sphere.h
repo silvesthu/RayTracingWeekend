@@ -78,7 +78,7 @@ public:
 		return false;
 	}
 
-	virtual bool bounding_box(float t0, float t1, aabb& box) const
+	bool bounding_box(float t0, float t1, aabb& box) const override
 	{
 		return strategy.bounding_box(center, radius, t0, t1, box);
 	}

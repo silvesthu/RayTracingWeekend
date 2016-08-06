@@ -165,7 +165,7 @@ private:
 
 	static void permute(int* p, int n)
 	{
-		std::uniform_real<float> uniform;
+		std::uniform_real_distribution<float> uniform;
 		std::minstd_rand engine;
 
 		for (int i = n - 1; i > 0; i--)
@@ -188,7 +188,7 @@ private:
 
 	static void perlin_generate_float(float* p, int n)
 	{
-		std::uniform_real<float> uniform;
+		std::uniform_real_distribution<float> uniform;
 		std::minstd_rand engine;
 
 		for (int i = 0; i < n; i++)
@@ -199,7 +199,7 @@ private:
 
 	static void perlin_generate_vec3(vec3* p, int n)
 	{
-		std::uniform_real<float> uniform;
+		std::uniform_real_distribution<float> uniform;
 		std::minstd_rand engine;
 
 		for (int i = 0; i < n; i++)

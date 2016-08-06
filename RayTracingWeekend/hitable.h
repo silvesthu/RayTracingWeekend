@@ -36,7 +36,7 @@ public:
 	bvh_node() {}
 	bvh_node(hitable **l, int n, float time0, float time1)
 	{
-		static std::uniform_real<float> uniform;
+		static std::uniform_real_distribution<float> uniform;
 		static std::minstd_rand engine;
 
 		auto comparer_gen = [](int i)
@@ -87,7 +87,7 @@ public:
 		box = aabb::surrounding(box_left, box_right);
 	}
 
-	virtual bool hit(const ray& r, float tmin, float tmax, hit_record& rec) const
+	bool hit(const ray& r, float tmin, float tmax, hit_record& rec) const override
 	{
 		if (box.hit(r, tmin, tmax))
 		{
@@ -121,7 +121,7 @@ public:
 		}
 	}
 
-	virtual bool bounding_box(float t0, float t1, aabb& b) const
+	bool bounding_box(float t0, float t1, aabb& b) const override
 	{
 		b = box;
 		return true;

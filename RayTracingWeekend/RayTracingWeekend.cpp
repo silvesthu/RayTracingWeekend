@@ -3,7 +3,14 @@
 
 #define NOMINMAX
 
-#include <tchar.h>
+#ifdef _WIN32
+	#include <crtdbg.h>
+	#include <ppl.h>
+	using namespace concurrency;
+#else
+	#include <tbb/tbb.h>
+#endif
+
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -14,10 +21,6 @@
 
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
-#include <crtdbg.h>
-
-#include <ppl.h>
-using namespace concurrency;
 
 #define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
@@ -68,7 +71,7 @@ vec3 color(const ray& r, hitable *world, int depth)
 {
 	hit_record rec;
 	// z_min = 0 will cause hit in the same point -> darker
-	if (world->hit(r, 0.001f, FLT_MAX, rec))
+	if (world->hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
 	{
 		ray scattered;
 		vec3 attenuation;
@@ -99,6 +102,10 @@ vec3 color(const ray& r, hitable *world, int depth)
 	}
 }
 
+#ifndef _WIN32
+typedef __int64_t __int64;
+#endif
+
 // https://msdn.microsoft.com/en-us/library/dd728080.aspx
 template <class Function>
 __int64 time_call(Function&& f)
@@ -125,13 +132,20 @@ void serial_for(_Index_type _First, _Index_type _Last, _Index_type _Step, const 
 template <typename _Index_type, typename _Function>
 void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Function& _Func)
 {
-	//serial_for(_First, _Last, _Step, _Func);
+#ifdef _WIN32
 	Concurrency::parallel_for(_First, _Last, _Step, _Func);
+#else
+	// only 2 times faster...
+	tbb::parallel_for(_First, _Last, _Step, _Func);
+#endif
+	//serial_for(_First, _Last, _Step, _Func);
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc, char* argv[])
 {
+#ifdef _WIN32
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
 	std::ofstream out("1.ppm");
 	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
@@ -209,9 +223,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	//	std::shared_ptr<texture> groundAlbedo = std::make_shared<checker_texture>(groundAlbedo0, groundAlbedo1);
 	//	list[0] = std::make_shared<sphere>(vec3(0, -1000, 0), 1000.0f, std::make_shared<lambertian>(groundAlbedo));
 
-	//	std::uniform_real<float> scene_uniform;
+	//	std::uniform_real_distribution<float> scene_uniform;
 	//	std::minstd_rand scene_engine;
-	//	std::uniform_real<float> time_uniform;
+	//	std::uniform_real_distribution<float> time_uniform;
 	//	std::minstd_rand time_engine;
 
 	//	// Small ones
@@ -283,14 +297,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	//}
 
 	// 2 perlin sphere scene
-	//const int n = 2;
-	//std::shared_ptr<hitable> list[n];
-	//{
-	//	std::shared_ptr<texture> noise = std::make_shared<noise_texture>();
+	// const int n = 2;
+	// std::shared_ptr<hitable> list[n];
+	// {
+	// 	std::shared_ptr<texture> noise = std::make_shared<noise_texture>();
 
-	//	list[0] = std::make_shared<sphere>(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<lambertian>(noise));
-	//	list[1] = std::make_shared<sphere>(vec3(0.0f,  2.0f, 0.0f), 2.0f, std::make_shared<lambertian>(noise));
-	//}
+	// 	list[0] = std::make_shared<sphere>(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<lambertian>(noise));
+	// 	list[1] = std::make_shared<sphere>(vec3(0.0f,  2.0f, 0.0f), 2.0f, std::make_shared<lambertian>(noise));
+	// }
 
 	// image scene
 	const int n = 1;
@@ -317,7 +331,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	float vfov = 20.0f;
 	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0f, 1.0f);
 
-	std::uniform_real<float> uniform;
+	std::uniform_real_distribution<float> uniform;
 	std::minstd_rand engine;
 
 	std::vector<vec3> canvas(nx * ny);
@@ -384,9 +398,14 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	out.close();
 
-	// ImageMagick
+	// use ImageMagick to convert into easy to check format
+#ifdef _WIN32
 	system("convert 1.ppm 1.png");
 	system("start 1.png");
+#else
+	system("/usr/local/bin/convert 1.ppm 1.png");
+	system("open 1.png");
+#endif
 
 	return 0;
 }
