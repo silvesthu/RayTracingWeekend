@@ -54,7 +54,7 @@ class noise_texture : public texture
 public:
 	noise_texture() : scale(5.f) {}
 	noise_texture(float sc) : scale(sc) {}
-	virtual vec3 value(float u, float v, const vec3& p) const
+	vec3 value(float u, float v, const vec3& p) const override
 	{
 		// static std::uniform_real<float> uniform;
 		// static std::minstd_rand engine;
@@ -78,13 +78,13 @@ public:
 
 	image_texture() {}
 	image_texture(std::shared_ptr<byte_array> pixels, int A, int B) : data(pixels), nx(A), ny(B) {}
-	virtual vec3 value(float u, float v, const vec3& p) const
+	vec3 value(float u, float v, const vec3& p) const override
 	{
 		int i = (int)(u * nx);
 		int j = (int)((1 - v) * ny - 0.001f); // ?
 
 		i = clamp(i, 0, nx - 1);
-		j = clamp(j, 0, nx - 1);
+		j = clamp(j, 0, ny - 1);
 
 		float r = int((*data)[3 * i + 3 * nx * j]) / 255.0f;
 		float g = int((*data)[3 * i + 3 * nx * j + 1]) / 255.0f;

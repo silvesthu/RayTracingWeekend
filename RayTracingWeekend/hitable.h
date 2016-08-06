@@ -19,6 +19,8 @@ struct hit_record
 	float t;
 	vec3 p;
 	vec3 normal; // should filled with normalized normal
+	float u;
+	float v;
 	material *mat_ptr;
 };
 

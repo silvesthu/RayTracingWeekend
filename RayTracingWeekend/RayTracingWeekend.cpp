@@ -147,12 +147,6 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-	std::ofstream out("1.ppm");
-	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
-	std::cout.rdbuf(out.rdbuf()); //redirect std::cout
-
-	std::cout << "P3\n" << nx << " " << ny << "\n255\n";
-
 	// Debug Scene
 	//std::shared_ptr<hitable> list[] =
 	//{
@@ -314,8 +308,11 @@ int main(int argc, char* argv[])
 		unsigned char* tex_data = stbi_load("earth.jpg", &nx, &ny, &nn, 0);
 		auto size = nx * ny * 3;
 		auto pArray = std::make_shared<image_texture::byte_array>(&tex_data[0], &tex_data[size]);
-		STBI_FREE(tex_data);		
+		STBI_FREE(tex_data);
+		std::cout << "Size: " << nx << " " << ny << " " << nn << " " << size << std::endl;
+
 		std::shared_ptr<texture> image = std::make_shared<image_texture>(pArray, nx, ny);
+
 		list[0] = std::make_shared<sphere>(vec3(0.0f, 0.5f, 0.0f), 2.0f, std::make_shared<lambertian>(image));
 	}
 
@@ -374,6 +371,12 @@ int main(int argc, char* argv[])
 			});
 		});
 	});
+
+	std::ofstream out("1.ppm");
+	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
+	std::cout.rdbuf(out.rdbuf()); //redirect std::cout
+
+	std::cout << "P3\n" << nx << " " << ny << "\n255\n";
 
 	__int64 elapsedWrite = time_call([&]
 	{

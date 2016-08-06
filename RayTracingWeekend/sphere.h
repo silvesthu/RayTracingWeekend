@@ -60,6 +60,7 @@ public:
 				rec.t = temp;
 				rec.p = r.point_at_parameter(rec.t);
 				rec.normal = (rec.p - currentCenter) / radius;
+				get_sphere_uv(rec.normal, rec.u, rec.v);
 				rec.mat_ptr = mat.get();
 				return true;
 			}
@@ -70,6 +71,7 @@ public:
 				rec.t = temp;
 				rec.p = r.point_at_parameter(rec.t);
 				rec.normal = (rec.p - currentCenter) / radius;
+				get_sphere_uv(rec.normal, rec.u, rec.v);
 				rec.mat_ptr = mat.get();
 				return true;
 			}
@@ -86,6 +88,15 @@ public:
 	void update_strategy(const Strategy& s)
 	{
 		strategy = s;
+	}
+
+	static void get_sphere_uv(const vec3& p, float& u, float& v)
+	{
+		float phi = atan2(p.z, p.x);
+		float theta = asin(p.y);
+
+		u = 1 - (phi + M_PI) / (2 * M_PI);
+		v = (theta + M_PI / 2) / M_PI;
 	}
 	
 	vec3 center;
