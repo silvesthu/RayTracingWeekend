@@ -4,6 +4,7 @@ RayTracingWeekend
 ![](https://ci.appveyor.com/api/projects/status/mu0rb4ljs40256ya?svg=true)
 
 ![First](First.png)
+![Cornell box](CornellBox.png)
 
 Implementation based on book **Ray Tracing Minibooks Book** series by **Peter Shirley**.
 

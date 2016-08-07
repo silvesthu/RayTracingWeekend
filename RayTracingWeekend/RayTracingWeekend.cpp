@@ -35,7 +35,7 @@
 #include "stb_image.h"
 
 const int size_multipler = 2;
-const int subPixel_count = 50;
+const int subPixel_count = 1000;
 
 const int nx = 200 * size_multipler;
 const int ny = 100 * size_multipler;
@@ -162,6 +162,12 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
+
+	vec3 lookfrom(12, 2, 3);
+	vec3 lookat(0, 0.5f, 0);
+	float dist_to_focus = (lookfrom - lookat).length();
+	float aperture = 0.2f;
+	float vfov = 20.0f;
 
 	// Debug Scene
 	//std::shared_ptr<hitable> list[] =
@@ -336,21 +342,57 @@ int main(int argc, char* argv[])
 	// 	list[0] = std::make_shared<sphere>(vec3(0.0f, 0.5f, 0.0f), 2.0f, std::make_shared<lambertian>(image));
 	// }
 
-	// sample light scene
-	const int n = 4;
+	//// sample light scene
+	// const int n = 4;
+	// std::shared_ptr<hitable> list[n];
+	// {
+	// 	std::shared_ptr<texture> pertext = std::make_shared<noise_texture>(4);
+	// 	std::shared_ptr<texture> four = std::make_shared<constant_texture>(vec3(4, 4, 4)); // color with scale
+
+	// 	list[0] = std::make_shared<sphere>(vec3(0, -1000, 0), 1000,
+	// 		std::make_shared<lambertian>(pertext));
+	// 	list[1] = std::make_shared<sphere>(vec3(0, 2, 0), 2,
+	// 	 	std::make_shared<lambertian>(pertext));
+	// 	list[2] = std::make_shared<sphere>(vec3(0, 7, 0), 2,
+	// 		std::make_shared<diffuse_light>(four));
+	// 	list[3] = std::make_shared<xy_rect>(3, 5, 1, 3, -2,
+	// 		std::make_shared<diffuse_light>(four));
+	//
+	//	lookat.y += 2;
+	//	lookfrom *= 2;
+	// }
+
+	// cornell box
+	const int n = 6;
 	std::shared_ptr<hitable> list[n];
 	{
-		std::shared_ptr<texture> pertext = std::make_shared<noise_texture>(4);
-		std::shared_ptr<texture> four = std::make_shared<constant_texture>(vec3(4, 4, 4)); // color with scale
+		std::shared_ptr<texture> red_tex = std::make_shared<constant_texture>(vec3(0.65f, 0.05f, 0.05f));
+		auto red = std::make_shared<lambertian>(red_tex);
+		std::shared_ptr<texture> white_tex = std::make_shared<constant_texture>(vec3(0.73f, 0.73f, 0.73f));
+		auto white = std::make_shared<lambertian>(white_tex);
+		std::shared_ptr<texture> green_tex = std::make_shared<constant_texture>(vec3(0.12f, 0.45f, 0.15));
+		auto green = std::make_shared<lambertian>(green_tex);
+		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15, 15, 15));
+		auto light = std::make_shared<diffuse_light>(light_tex);
 
-		list[0] = std::make_shared<sphere>(vec3(0, -1000, 0), 1000,
-			std::make_shared<lambertian>(pertext));
-		list[1] = std::make_shared<sphere>(vec3(0, 2, 0), 2,
-		 	std::make_shared<lambertian>(pertext));
-		list[2] = std::make_shared<sphere>(vec3(0, 7, 0), 2,
-			std::make_shared<diffuse_light>(four));
-		list[3] = std::make_shared<xy_rect>(3, 5, 1, 3, -2,
-			std::make_shared<diffuse_light>(four));
+		list[0] = std::make_shared<flip_normals>(
+			std::make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+		list[1] =
+			std::make_shared<yz_rect>(0, 555, 0, 555, 0, red);
+		list[2] =
+			std::make_shared<xz_rect>(213, 343, 227, 332, 554, light);
+		list[3] = std::make_shared<flip_normals>(
+			std::make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+		list[4] =
+			std::make_shared<xz_rect>(0, 555, 0, 555, 0, white);
+		list[5] = std::make_shared<flip_normals>(
+			std::make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+		lookfrom = vec3(278, 278, -800);
+		lookat = vec3(278, 278, 0);
+		dist_to_focus = 10.0f;
+		aperture = 0.0f;
+		vfov = 40.0f;
 	}
 
 	hitable_list world(list, n);
@@ -358,16 +400,6 @@ int main(int argc, char* argv[])
 	//vec3 lookfrom(3, 3, 2); // defocus
 	//vec3 lookat(0, 0, -1);
 
-	vec3 lookfrom(12, 2, 3);
-	vec3 lookat(0, 0.5f, 0);
-	{
-		lookat.y += 2;
-		lookfrom *= 2;
-	}
-
-	float dist_to_focus = (lookfrom - lookat).length();
-	float aperture = 0.2f;
-	float vfov = 20.0f;
 	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0f, 1.0f);
 
 	std::uniform_real_distribution<float> uniform;
