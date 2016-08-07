@@ -34,13 +34,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#ifdef _DEBUG
-	const int size_multipler = 1;
-	const int subPixel_count = 5;
-#else
-	const int size_multipler = 2;
-	const int subPixel_count = 10;
-#endif
+const int size_multipler = 2;
+const int subPixel_count = 50;
 
 const int nx = 200 * size_multipler;
 const int ny = 100 * size_multipler;
@@ -61,6 +56,14 @@ enum class RenderType
 };
 
 RenderType s_renderType = RenderType::Shaded;
+
+enum class BackgroundType
+{
+	Black,
+	Gradient,
+};
+
+BackgroundType s_backgroundType = BackgroundType::Black;
 
 // x : -2  ~  2
 // y : -1  ~  1
@@ -92,14 +95,26 @@ vec3 color(const ray& r, hitable *world, int depth)
 			return 0.5f * (rec.normal + 1);
 		default:
 			return vec3(0, 0, 0);
-		}	
+		}
 	}
 	else
 	{
-		// * Gradient background along y-axis
-		vec3 unit_direction = normalize(r.direction());
-		float t = 0.5f * (unit_direction.y + 1.0f);
-		return lerp(vec3(0.5f, 0.7f, 1.0f), vec3(1.0f, 1.0f, 1.0f), t);
+		switch (s_backgroundType)
+		{
+			case BackgroundType::Gradient:
+			{
+				// * Gradient background along y-axis
+				vec3 unit_direction = normalize(r.direction());
+				float t = 0.5f * (unit_direction.y + 1.0f);
+				return lerp(vec3(0.5f, 0.7f, 1.0f), vec3(1.0f, 1.0f, 1.0f), t);
+			}
+			case BackgroundType::Black:
+			default:
+			{
+				// * Black background
+				return vec3(0, 0, 0);
+			}
+		}
 	}
 }
 
@@ -158,22 +173,22 @@ int main(int argc, char* argv[])
 	// Metal scene
 	//std::shared_ptr<hitable> list[] =
 	//{
-	//	std::make_shared<sphere>(vec3(0, 0, -1), 0.5f, 
+	//	std::make_shared<sphere>(vec3(0, 0, -1), 0.5f,
 	//		std::make_shared<lambertian>(vec3(0.8f, 0.3f, 0.3f))),
-	//	std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f, 
+	//	std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f,
 	//		std::make_shared<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
 	//	std::make_shared<sphere>(vec3(1, 0, -1), 0.5f,
 	//		std::make_shared<metal>(vec3(0.8f, 0.6f, 0.2f), 1.0f)),
 	//	std::make_shared<sphere>(vec3(-1, 0, -1), 0.5f,
 	//		std::make_shared<metal>(vec3(0.8f, 0.8f, 0.8f), 0.3f))
 	//};
-	
+
 	// Dielectric scene
 	//std::shared_ptr<hitable> list[] =
 	//{
-	//	std::make_shared<sphere>(vec3(0, 0, -1), 0.5f, 
+	//	std::make_shared<sphere>(vec3(0, 0, -1), 0.5f,
 	//		std::make_shared<lambertian>(vec3(0.1f, 0.2f, 0.5f))),
-	//	std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f, 
+	//	std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f,
 	//		std::make_shared<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
 	//	std::make_shared<sphere>(vec3(1, 0, -1), 0.5f,
 	//		std::make_shared<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)),
@@ -184,9 +199,9 @@ int main(int argc, char* argv[])
 	// Dielectric scene - schlick
 	//std::shared_ptr<hitable> list[] =
 	//{
-	//	std::make_shared<sphere>(vec3(0, 0, -1), 0.5f, 
+	//	std::make_shared<sphere>(vec3(0, 0, -1), 0.5f,
 	//		std::make_shared<lambertian>(vec3(0.1f, 0.2f, 0.5f))),
-	//	std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f, 
+	//	std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f,
 	//		std::make_shared<lambertian>(vec3(0.8f, 0.8f, 0.0f))),
 	//	std::make_shared<sphere>(vec3(1, 0, -1), 0.5f,
 	//		std::make_shared<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)),
@@ -200,9 +215,9 @@ int main(int argc, char* argv[])
 	//float R = cos((float)M_PI / 4.0f);
 	//std::shared_ptr<hitable> list[] =
 	//{
-	//	std::make_shared<sphere>(vec3(-R, 0, -1), R, 
+	//	std::make_shared<sphere>(vec3(-R, 0, -1), R,
 	//		std::make_shared<lambertian>(vec3(0, 0, 1))),
-	//	std::make_shared<sphere>(vec3(R, 0, -1), R, 
+	//	std::make_shared<sphere>(vec3(R, 0, -1), R,
 	//		std::make_shared<lambertian>(vec3(1, 0, 0)))
 	//};
 
@@ -248,7 +263,7 @@ int main(int argc, char* argv[])
 	//					s.time0 = 0.0f;
 	//					s.time1 = 1.0f;
 	//					static_cast<moving_sphere*>(list[i - 1].get())->update_strategy(s);
-	//				} 
+	//				}
 	//				else
 	//				{
 	//					if (choose_mat < 0.95) // metal
@@ -292,18 +307,18 @@ int main(int argc, char* argv[])
 	//}
 
 	//// 2 perlin sphere scene + emit test
-	const int n = 2;
-	std::shared_ptr<hitable> list[n];
-	{
-		std::shared_ptr<texture> noise = std::make_shared<noise_texture>();
-		std::shared_ptr<texture> red = std::make_shared<constant_texture>(vec3(1.0f, 0.0f, 0.0f));
+	// const int n = 2;
+	// std::shared_ptr<hitable> list[n];
+	// {
+	// 	std::shared_ptr<texture> noise = std::make_shared<noise_texture>();
+	// 	std::shared_ptr<texture> red = std::make_shared<constant_texture>(vec3(1.0f, 0.0f, 0.0f));
 
-		list[0] = std::make_shared<sphere>(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, 
-			std::make_shared<lambertian>(noise));
-		list[1] = std::make_shared<sphere>(vec3(0.0f,  2.0f, 0.0f), 2.0f, 
-			//std::make_shared<lambertian>(noise));
-			std::make_shared<diffuse_light>(red));
-	}
+	// 	list[0] = std::make_shared<sphere>(vec3(0.0f, -1000.0f, 0.0f), 1000.0f,
+	// 		std::make_shared<lambertian>(noise));
+	// 	list[1] = std::make_shared<sphere>(vec3(0.0f,  2.0f, 0.0f), 2.0f,
+	// 		//std::make_shared<lambertian>(noise));
+	// 		std::make_shared<diffuse_light>(red));
+	// }
 
 	//// image scene
 	//const int n = 1;
@@ -321,6 +336,23 @@ int main(int argc, char* argv[])
 	// 	list[0] = std::make_shared<sphere>(vec3(0.0f, 0.5f, 0.0f), 2.0f, std::make_shared<lambertian>(image));
 	// }
 
+	// sample light scene
+	const int n = 4;
+	std::shared_ptr<hitable> list[n];
+	{
+		std::shared_ptr<texture> pertext = std::make_shared<noise_texture>(4);
+		std::shared_ptr<texture> four = std::make_shared<constant_texture>(vec3(4, 4, 4)); // color with scale
+
+		list[0] = std::make_shared<sphere>(vec3(0, -1000, 0), 1000,
+			std::make_shared<lambertian>(pertext));
+		list[1] = std::make_shared<sphere>(vec3(0, 2, 0), 2,
+		 	std::make_shared<lambertian>(pertext));
+		list[2] = std::make_shared<sphere>(vec3(0, 7, 0), 2,
+			std::make_shared<diffuse_light>(four));
+		list[3] = std::make_shared<xy_rect>(3, 5, 1, 3, -2,
+			std::make_shared<diffuse_light>(four));
+	}
+
 	hitable_list world(list, n);
 	//vec3 lookfrom(-2, 2, 1); // before defocus
 	//vec3 lookfrom(3, 3, 2); // defocus
@@ -328,6 +360,11 @@ int main(int argc, char* argv[])
 
 	vec3 lookfrom(12, 2, 3);
 	vec3 lookat(0, 0.5f, 0);
+	{
+		lookat.y += 2;
+		lookfrom *= 2;
+	}
+
 	float dist_to_focus = (lookfrom - lookat).length();
 	float aperture = 0.2f;
 	float vfov = 20.0f;
@@ -395,7 +432,7 @@ int main(int argc, char* argv[])
 				int ig = int(255.99f * col.g);
 				int ib = int(255.99f * col.b);
 
-				std::cout << ir << " " << ig << " " << ib << "\n"; 
+				std::cout << ir << " " << ig << " " << ib << "\n";
 			}
 		}
 	});
