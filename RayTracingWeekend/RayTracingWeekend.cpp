@@ -75,22 +75,23 @@ vec3 color(const ray& r, hitable *world, int depth)
 	{
 		ray scattered;
 		vec3 attenuation;
+		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
 
 		switch (s_renderType)
 		{
 		case RenderType::Shaded:
 			if (depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
 			{
-				return attenuation * color(scattered, world, depth + 1);
+				return emitted + attenuation * color(scattered, world, depth + 1);
 			}
 			else
 			{
-				return vec3(0, 0, 0);
+				return emitted;
 			}
 		case RenderType::Normal:
 			return 0.5f * (rec.normal + 1);
 		default:
-			return vec3();
+			return vec3(0, 0, 0);
 		}	
 	}
 	else
@@ -290,31 +291,35 @@ int main(int argc, char* argv[])
 	//	list[1] = std::make_shared<sphere>(vec3(0.0f,  10.0f, 0.0f), 10.0f, std::make_shared<lambertian>(checker));
 	//}
 
-	// 2 perlin sphere scene
-	// const int n = 2;
-	// std::shared_ptr<hitable> list[n];
-	// {
-	// 	std::shared_ptr<texture> noise = std::make_shared<noise_texture>();
-
-	// 	list[0] = std::make_shared<sphere>(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<lambertian>(noise));
-	// 	list[1] = std::make_shared<sphere>(vec3(0.0f,  2.0f, 0.0f), 2.0f, std::make_shared<lambertian>(noise));
-	// }
-
-	// image scene
-	const int n = 1;
+	//// 2 perlin sphere scene + emit test
+	const int n = 2;
 	std::shared_ptr<hitable> list[n];
 	{
-		int nx, ny, nn;
-		unsigned char* tex_data = stbi_load("earth.jpg", &nx, &ny, &nn, 0);
-		auto size = nx * ny * 3;
-		auto pArray = std::make_shared<image_texture::byte_array>(&tex_data[0], &tex_data[size]);
-		STBI_FREE(tex_data);
-		std::cout << "Size: " << nx << " " << ny << " " << nn << " " << size << std::endl;
+		std::shared_ptr<texture> noise = std::make_shared<noise_texture>();
+		std::shared_ptr<texture> red = std::make_shared<constant_texture>(vec3(1.0f, 0.0f, 0.0f));
 
-		std::shared_ptr<texture> image = std::make_shared<image_texture>(pArray, nx, ny);
-
-		list[0] = std::make_shared<sphere>(vec3(0.0f, 0.5f, 0.0f), 2.0f, std::make_shared<lambertian>(image));
+		list[0] = std::make_shared<sphere>(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, 
+			std::make_shared<lambertian>(noise));
+		list[1] = std::make_shared<sphere>(vec3(0.0f,  2.0f, 0.0f), 2.0f, 
+			//std::make_shared<lambertian>(noise));
+			std::make_shared<diffuse_light>(red));
 	}
+
+	//// image scene
+	//const int n = 1;
+	// std::shared_ptr<hitable> list[n];
+	// {
+	// 	int nx, ny, nn;
+	// 	unsigned char* tex_data = stbi_load("earth.jpg", &nx, &ny, &nn, 0);
+	// 	auto size = nx * ny * 3;
+	// 	auto pArray = std::make_shared<image_texture::byte_array>(&tex_data[0], &tex_data[size]);
+	// 	STBI_FREE(tex_data);
+	// 	std::cout << "Size: " << nx << " " << ny << " " << nn << " " << size << std::endl;
+
+	// 	std::shared_ptr<texture> image = std::make_shared<image_texture>(pArray, nx, ny);
+
+	// 	list[0] = std::make_shared<sphere>(vec3(0.0f, 0.5f, 0.0f), 2.0f, std::make_shared<lambertian>(image));
+	// }
 
 	hitable_list world(list, n);
 	//vec3 lookfrom(-2, 2, 1); // before defocus
