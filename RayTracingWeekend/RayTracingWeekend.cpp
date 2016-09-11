@@ -1,5 +1,9 @@
-// RayTracingWeekend.cpp : Defines the entry point for the console application.
-//
+// * Well, shared_ptr is really a mess... but never mind...
+// * Benefit from parallism is hard to image (too much will do harm to overall performance)
+// * Introduce SIMD in a small proportion make things even worse. Rewrite is time-consuming
+// * Amazingly ppl and tbb is easy enough to exchange
+
+// # 800(w) * 400(h) * 800(sub) => 120s
 
 #define NOMINMAX
 
@@ -35,18 +39,18 @@
 #include "stb_image.h"
 
 const int size_multipler = 2;
-const int subPixel_count = 1000;
+const int subPixel_base_count = 100;
 
 const int nx = 200 * size_multipler;
 const int ny = 100 * size_multipler;
-const int subPixelCount = subPixel_count * size_multipler;
+const int subPixelCount = subPixel_base_count;
 
 //#define DEBUG_RAY
 
 #ifdef DEBUG_RAY
 const int max_depth = 1;
 #else
-const int max_depth = 50;
+const int max_depth = 100;
 #endif
 
 enum class RenderType
@@ -363,7 +367,7 @@ int main(int argc, char* argv[])
 	// }
 
 	// cornell box
-	const int n = 6;
+	const int n = 8;
 	std::shared_ptr<hitable> list[n];
 	{
 		std::shared_ptr<texture> red_tex = std::make_shared<constant_texture>(vec3(0.65f, 0.05f, 0.05f));
@@ -388,6 +392,20 @@ int main(int argc, char* argv[])
 		list[5] = std::make_shared<flip_normals>(
 			std::make_shared<xy_rect>(0, 555, 0, 555, 555, white));
 
+		list[6] = 
+			std::make_shared<translate>(
+				std::make_shared<rotate_y>(
+					std::make_shared<box>(vec3(0, 0, 0), vec3(165, 165, 165), white),
+					-18),
+				vec3(130, 0, 65));
+
+		list[7] = 
+			std::make_shared<translate>(
+				std::make_shared<rotate_y>(
+					std::make_shared<box>(vec3(0, 0, 0), vec3(165, 330, 165), white),
+					15),
+				vec3(265, 0, 295));
+
 		lookfrom = vec3(278, 278, -800);
 		lookat = vec3(278, 278, 0);
 		dist_to_focus = 10.0f;
@@ -411,11 +429,11 @@ int main(int argc, char* argv[])
 		// accelerated on this parallel
 		_for(0, ny, 1, [&](int j)
 		{
-			// no obvious acceleration on this parallel
-			_for(0, nx, 1, [&](int i)
+			// no obvious acceleration on this parallel, maybe even slower
+			serial_for(0, nx, 1, [&](int i)
 			{
 				vec3 subPixels[subPixelCount];
-				_for(0, subPixelCount, 1, [&](int s)
+				serial_for(0, subPixelCount, 1, [&](int s)
 				{
 					float u = float(i + uniform(engine)) / float(nx);
 					float v = float(j + uniform(engine)) / float(ny);
@@ -436,8 +454,8 @@ int main(int argc, char* argv[])
 					sum += c;
 				}
 
-				// to gamma 2
 				auto col = sum / static_cast<float>(subPixelCount);
+				// to gamma 2
 				col = vec3(sqrt(col.x), sqrt(col.y), sqrt(col.z));
 
 				// save to canvas
@@ -450,6 +468,7 @@ int main(int argc, char* argv[])
 	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
 	std::cout.rdbuf(out.rdbuf()); //redirect std::cout
 
+	// output as ppm
 	std::cout << "P3\n" << nx << " " << ny << "\n255\n";
 
 	__int64 elapsedWrite = time_call([&]
@@ -460,10 +479,12 @@ int main(int argc, char* argv[])
 			{
 				vec3 col = canvas[j * nx + i];
 
+				// 255.99f for float inaccuracy
 				int ir = int(255.99f * col.r);
 				int ig = int(255.99f * col.g);
 				int ib = int(255.99f * col.b);
 
+				// output as ppm
 				std::cout << ir << " " << ig << " " << ib << "\n";
 			}
 		}

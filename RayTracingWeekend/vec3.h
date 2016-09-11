@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
+#include <emmintrin.h>
 
 class vec3
 {
