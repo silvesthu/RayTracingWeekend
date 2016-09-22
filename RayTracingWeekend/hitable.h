@@ -5,6 +5,7 @@
 #include "vec3.h"
 #include "ray.h"
 #include "aabb.h"
+#include "texture.h"
 
 class material;
 
@@ -300,6 +301,7 @@ public:
 	vec3 offset;
 };
 
+// rotate hitable
 class rotate_y : public hitable
 {
 public:
@@ -387,7 +389,77 @@ public:
 	aabb bbox;
 };
 
+// probability = C(proportional to optical density) * dL(distance)
 
+class constant_medium : public hitable
+{
+public:
+	constant_medium(
+		std::shared_ptr<hitable> b,
+		float d,
+		std::shared_ptr<material> mat) : boundary(b), density(d), mp(mat)
+	{
+	}
 
+	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const
+	{
+		static std::uniform_real_distribution<float> uniform;
+		static std::minstd_rand engine;
+
+		hit_record rec1, rec2;
+
+		// hit the volume
+		if (boundary->hit(
+			r,
+			-std::numeric_limits<float>::max(),
+			std::numeric_limits<float>::max(),
+			rec1))
+		{
+			// take a small step
+			if(boundary->hit(
+				r,
+				rec1.t + 0.0001f,
+				std::numeric_limits<float>::max(),
+				rec2))
+			{
+				// out of bound
+				if (rec1.t < t_min)
+					rec1.t = t_min;
+				if (rec2.t > t_max)
+					rec2.t = t_max;
+				if (rec1.t >= rec2.t)
+					return false;
+
+				// eliminate minus value
+				if (rec1.t < 0)
+					rec1.t = 0;
+
+				float distance_inside_boundary = 
+					(rec2.t - rec1.t) * r.direction().length();
+				float hit_distance = -(1 / density) * log(uniform(engine));
+
+				if (hit_distance < distance_inside_boundary)
+				{
+					rec.t = rec1.t + hit_distance / r.direction().length();
+					rec.p = r.point_at_parameter(rec.t);
+					rec.normal = vec3(1, 0, 0); // arbitrary
+					rec.mat_ptr = mp.get();
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	virtual bool bounding_box(float t0, float t1, aabb& box) const
+	{
+		return boundary->bounding_box(t0, t1, box);
+	}
+
+	std::shared_ptr<hitable> boundary;
+	float density;
+	std::shared_ptr<material> mp;
+};
 
 

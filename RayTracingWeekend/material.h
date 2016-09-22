@@ -182,3 +182,22 @@ public:
 
 	std::shared_ptr<texture> emit;
 };
+
+// from author's comment (detail not in book)
+// http://in1weekend.blogspot.jp/2016/01/ray-tracing-second-weekend.html?showComment=1461950451498#c5689943635697942364
+// isotropic here means scatter light in every direction equally
+class isotropic : public material
+{
+public:
+	isotropic(std::shared_ptr<texture> t) : albedo(t) {}
+
+	bool scatter(const ray& r_in, const hit_record& rec, 
+		vec3& attenuation, ray& scattered) const override
+	{
+		scattered = ray(rec.p, random_in_unit_sphere());
+		attenuation = albedo->value(rec.u, rec.v, rec.p);
+		return true;
+	}
+
+	std::shared_ptr<texture> albedo;
+};

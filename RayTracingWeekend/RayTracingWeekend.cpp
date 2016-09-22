@@ -39,9 +39,10 @@
 #include "stb_image.h"
 
 const int size_multipler = 2;
-const int subPixel_base_count = 100;
+const int subPixel_base_count = 300;
 
-const int nx = 200 * size_multipler;
+//const int nx = 200 * size_multipler;
+const int nx = 100 * size_multipler;
 const int ny = 100 * size_multipler;
 const int subPixelCount = subPixel_base_count;
 
@@ -376,15 +377,18 @@ int main(int argc, char* argv[])
 		auto white = std::make_shared<lambertian>(white_tex);
 		std::shared_ptr<texture> green_tex = std::make_shared<constant_texture>(vec3(0.12f, 0.45f, 0.15));
 		auto green = std::make_shared<lambertian>(green_tex);
-		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15, 15, 15));
+		//std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15, 15, 15));
+		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(7, 7, 7));
 		auto light = std::make_shared<diffuse_light>(light_tex);
 
 		list[0] = std::make_shared<flip_normals>(
 			std::make_shared<yz_rect>(0, 555, 0, 555, 555, green));
 		list[1] =
 			std::make_shared<yz_rect>(0, 555, 0, 555, 0, red);
+		// list[2] =
+		// 	std::make_shared<xz_rect>(213, 343, 227, 332, 554, light);
 		list[2] =
-			std::make_shared<xz_rect>(213, 343, 227, 332, 554, light);
+			std::make_shared<xz_rect>(113, 443, 127, 432, 554, light);
 		list[3] = std::make_shared<flip_normals>(
 			std::make_shared<xz_rect>(0, 555, 0, 555, 555, white));
 		list[4] =
@@ -405,6 +409,30 @@ int main(int argc, char* argv[])
 					std::make_shared<box>(vec3(0, 0, 0), vec3(165, 330, 165), white),
 					15),
 				vec3(265, 0, 295));
+
+		auto white_isotropic = std::make_shared<isotropic>(white_tex);
+		std::shared_ptr<texture> black_tex = std::make_shared<constant_texture>(vec3(0,0,0));
+		auto black_isotropic = std::make_shared<isotropic>(black_tex);
+
+		// list[6] = 
+		// 	std::make_shared<constant_medium>(
+		// 		std::make_shared<translate>(
+		// 			std::make_shared<rotate_y>(
+		// 				std::make_shared<box>(vec3(0, 0, 0), vec3(165, 165, 165), white),
+		// 				-18),
+		// 			vec3(130, 0, 65)), 
+		// 		0.01, 
+		// 		white_isotropic);
+		
+		// list[7] = 
+		// 	std::make_shared<constant_medium>(
+		// 		std::make_shared<translate>(
+		// 			std::make_shared<rotate_y>(
+		// 				std::make_shared<box>(vec3(0, 0, 0), vec3(165, 330, 165), white),
+		// 				15),
+		// 			vec3(265, 0, 295)),
+		// 		0.01,
+		// 		black_isotropic);
 
 		lookfrom = vec3(278, 278, -800);
 		lookat = vec3(278, 278, 0);
