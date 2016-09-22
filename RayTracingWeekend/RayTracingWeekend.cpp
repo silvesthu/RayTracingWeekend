@@ -375,56 +375,56 @@ int main(int argc, char* argv[])
 		auto red = std::make_shared<lambertian>(red_tex);
 		std::shared_ptr<texture> white_tex = std::make_shared<constant_texture>(vec3(0.73f, 0.73f, 0.73f));
 		auto white = std::make_shared<lambertian>(white_tex);
-		std::shared_ptr<texture> green_tex = std::make_shared<constant_texture>(vec3(0.12f, 0.45f, 0.15));
+		std::shared_ptr<texture> green_tex = std::make_shared<constant_texture>(vec3(0.12f, 0.45f, 0.15f));
 		auto green = std::make_shared<lambertian>(green_tex);
-		//std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15, 15, 15));
-		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(7, 7, 7));
+		//std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15.0f, 15.0f, 15.0f));
+		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(7.0f, 7.0f, 7.0f));
 		auto light = std::make_shared<diffuse_light>(light_tex);
 
 		list[0] = std::make_shared<flip_normals>(
-			std::make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+			std::make_shared<yz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, green));
 		list[1] =
-			std::make_shared<yz_rect>(0, 555, 0, 555, 0, red);
+			std::make_shared<yz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 0.0f, red);
 		// list[2] =
-		// 	std::make_shared<xz_rect>(213, 343, 227, 332, 554, light);
+		// 	std::make_shared<xz_rect>(213.0f, 343.0f, 227.0f, 332.0f, 554.0f, light);
 		list[2] =
-			std::make_shared<xz_rect>(113, 443, 127, 432, 554, light);
+			std::make_shared<xz_rect>(113.0f, 443.0f, 127.0f, 432.0f, 554.0f, light);
 		list[3] = std::make_shared<flip_normals>(
-			std::make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+			std::make_shared<xz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, white));
 		list[4] =
-			std::make_shared<xz_rect>(0, 555, 0, 555, 0, white);
+			std::make_shared<xz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 0.0f, white);
 		list[5] = std::make_shared<flip_normals>(
-			std::make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+			std::make_shared<xy_rect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, white));
 
-		list[6] = 
+		list[6] =
 			std::make_shared<translate>(
 				std::make_shared<rotate_y>(
-					std::make_shared<box>(vec3(0, 0, 0), vec3(165, 165, 165), white),
-					-18),
-				vec3(130, 0, 65));
+					std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 165.0f, 165.0f), white),
+					-18.0f),
+				vec3(130.0f, 0.0f, 65.0f));
 
-		list[7] = 
+		list[7] =
 			std::make_shared<translate>(
 				std::make_shared<rotate_y>(
-					std::make_shared<box>(vec3(0, 0, 0), vec3(165, 330, 165), white),
-					15),
-				vec3(265, 0, 295));
+					std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 330.0f, 165.0f), white),
+					15.0f),
+				vec3(265.0f, 0.0f, 295.0f));
 
 		auto white_isotropic = std::make_shared<isotropic>(white_tex);
-		std::shared_ptr<texture> black_tex = std::make_shared<constant_texture>(vec3(0,0,0));
+		std::shared_ptr<texture> black_tex = std::make_shared<constant_texture>(vec3(0.0f, 0.0f, 0.0f));
 		auto black_isotropic = std::make_shared<isotropic>(black_tex);
 
-		// list[6] = 
+		// list[6] =
 		// 	std::make_shared<constant_medium>(
 		// 		std::make_shared<translate>(
 		// 			std::make_shared<rotate_y>(
 		// 				std::make_shared<box>(vec3(0, 0, 0), vec3(165, 165, 165), white),
 		// 				-18),
-		// 			vec3(130, 0, 65)), 
-		// 		0.01, 
+		// 			vec3(130, 0, 65)),
+		// 		0.01,
 		// 		white_isotropic);
-		
-		// list[7] = 
+
+		// list[7] =
 		// 	std::make_shared<constant_medium>(
 		// 		std::make_shared<translate>(
 		// 			std::make_shared<rotate_y>(
@@ -434,8 +434,8 @@ int main(int argc, char* argv[])
 		// 		0.01,
 		// 		black_isotropic);
 
-		lookfrom = vec3(278, 278, -800);
-		lookat = vec3(278, 278, 0);
+		lookfrom = vec3(278.0f, 278.0f, -800.0f);
+		lookat = vec3(278.0f, 278.0f, 0.0f);
 		dist_to_focus = 10.0f;
 		aperture = 0.0f;
 		vfov = 40.0f;
@@ -446,7 +446,7 @@ int main(int argc, char* argv[])
 	//vec3 lookfrom(3, 3, 2); // defocus
 	//vec3 lookat(0, 0, -1);
 
-	camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0f, 1.0f);
+	camera cam(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0f, 1.0f);
 
 	std::uniform_real_distribution<float> uniform;
 	std::minstd_rand engine;

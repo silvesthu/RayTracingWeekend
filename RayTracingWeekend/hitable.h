@@ -1,6 +1,9 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+
 #include <iostream>
+#include "math.h"
 
 #include "vec3.h"
 #include "ray.h"
@@ -308,7 +311,7 @@ public:
 	rotate_y(std::shared_ptr<hitable> p, float angle) : ptr(p)
 	{
 		// calculate new aabb
-		float radians = (M_PI / 180.0f) * angle;
+		float radians = ((float)M_PI / 180.0f) * angle;
 		sin_theta = sin(radians);
 		cos_theta = cos(radians);
 		float floatMax = std::numeric_limits<float>::max();
