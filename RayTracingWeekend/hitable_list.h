@@ -6,7 +6,7 @@ class hitable_list : public hitable {
 public:
 	hitable_list() {}
 	hitable_list(std::shared_ptr<hitable>*l, int n) { list = l; list_size = n; }
-	hitable_list(const std::vector<std::shared_ptr<hitable>>& list) 
+	hitable_list(const std::vector<std::shared_ptr<hitable>>& list)
 		: list(nullptr), list_size(0), saved_list(list) { }
 	bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
 	{
@@ -58,21 +58,26 @@ public:
 
 		// AABB composed with 6 planes
 		std::vector<std::shared_ptr<hitable>> list;
-		list.push_back(std::make_shared<xy_rect>(
-			p0.x, p1.x, p0.y, p1.y, p1.z, mat));
+		list.push_back(
+			std::make_shared<xy_rect>(
+				p0.x, p1.x, p0.y, p1.y, p1.z, mat));
 		list.push_back(std::make_shared<flip_normals>(
 			std::make_shared<xy_rect>(
 				p0.x, p1.x, p0.y, p1.y, p0.z, mat)));
-		list.push_back(std::make_shared<xz_rect>(
-			p0.x, p1.x, p0.z, p1.z, p1.y, mat));
+
+		list.push_back(
+			std::make_shared<xz_rect>(
+				p0.x, p1.x, p0.z, p1.z, p1.y, mat));
 		list.push_back(std::make_shared<flip_normals>(
 			std::make_shared<xz_rect>(
 				p0.x, p1.x, p0.z, p1.z, p0.y, mat)));
-		list.push_back(std::make_shared<yz_rect>(
-			p0.y, p1.y, p0.z, p1.z, p1.x, mat));
+
+		list.push_back(
+			std::make_shared<yz_rect>(
+				p0.y, p1.y, p0.z, p1.z, p1.x, mat));
 		list.push_back(std::make_shared<flip_normals>(
 			std::make_shared<yz_rect>(
-				p0.x, p0.y, p1.y, p1.z, p0.x, mat)));
+				p0.y, p1.y, p0.z, p1.z, p0.x, mat)));
 
 		list_ptr = hitable_list(list);
 	}

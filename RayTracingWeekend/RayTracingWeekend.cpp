@@ -2,6 +2,7 @@
 // * Benefit from parallism is hard to image (too much will do harm to overall performance)
 // * Introduce SIMD in a small proportion make things even worse. Rewrite is time-consuming
 // * Amazingly ppl and tbb is easy enough to exchange
+// * Always be careful about color range. Overflow made green turns purple in my experiment...
 
 // # 800(w) * 400(h) * 800(sub) => 120s
 
@@ -39,15 +40,13 @@
 #include "stb_image.h"
 
 const int size_multipler = 2;
-const int subPixel_base_count = 300;
+const int subPixel_base_count = 800;
 
-//const int nx = 200 * size_multipler;
 const int nx = 100 * size_multipler;
 const int ny = 100 * size_multipler;
 const int subPixelCount = subPixel_base_count;
 
 //#define DEBUG_RAY
-
 #ifdef DEBUG_RAY
 const int max_depth = 1;
 #else
@@ -381,14 +380,16 @@ int main(int argc, char* argv[])
 		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(7.0f, 7.0f, 7.0f));
 		auto light = std::make_shared<diffuse_light>(light_tex);
 
-		list[0] = std::make_shared<flip_normals>(
-			std::make_shared<yz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, green));
-		list[1] =
-			std::make_shared<yz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 0.0f, red);
-		// list[2] =
+		//list[0] =
 		// 	std::make_shared<xz_rect>(213.0f, 343.0f, 227.0f, 332.0f, 554.0f, light);
-		list[2] =
+		list[0] =
 			std::make_shared<xz_rect>(113.0f, 443.0f, 127.0f, 432.0f, 554.0f, light);
+
+		list[1] = std::make_shared<flip_normals>(
+			std::make_shared<yz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, green));
+		list[2] =
+			std::make_shared<yz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 0.0f, red);
+
 		list[3] = std::make_shared<flip_normals>(
 			std::make_shared<xz_rect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, white));
 		list[4] =
@@ -396,43 +397,43 @@ int main(int argc, char* argv[])
 		list[5] = std::make_shared<flip_normals>(
 			std::make_shared<xy_rect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, white));
 
-		list[6] =
-			std::make_shared<translate>(
-				std::make_shared<rotate_y>(
-					std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 165.0f, 165.0f), white),
-					-18.0f),
-				vec3(130.0f, 0.0f, 65.0f));
+		//list[6] =
+		//	std::make_shared<translate>(
+		//		std::make_shared<rotate_y>(
+		//			std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 165.0f, 165.0f), white),
+		//			-18.0f),
+		//		vec3(130.0f, 0.0f, 65.0f));
 
-		list[7] =
-			std::make_shared<translate>(
-				std::make_shared<rotate_y>(
-					std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 330.0f, 165.0f), white),
-					15.0f),
-				vec3(265.0f, 0.0f, 295.0f));
+		//list[7] =
+		//	std::make_shared<translate>(
+		//		std::make_shared<rotate_y>(
+		//			std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 330.0f, 165.0f), white),
+		//			15.0f),
+		//		vec3(265.0f, 0.0f, 295.0f));
 
 		auto white_isotropic = std::make_shared<isotropic>(white_tex);
 		std::shared_ptr<texture> black_tex = std::make_shared<constant_texture>(vec3(0.0f, 0.0f, 0.0f));
 		auto black_isotropic = std::make_shared<isotropic>(black_tex);
 
-		// list[6] =
-		// 	std::make_shared<constant_medium>(
-		// 		std::make_shared<translate>(
-		// 			std::make_shared<rotate_y>(
-		// 				std::make_shared<box>(vec3(0, 0, 0), vec3(165, 165, 165), white),
-		// 				-18),
-		// 			vec3(130, 0, 65)),
-		// 		0.01,
-		// 		white_isotropic);
+		list[6] =
+		 	std::make_shared<constant_medium>(
+		 		std::make_shared<translate>(
+		 			std::make_shared<rotate_y>(
+		 				std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 165.0f, 165.0f), white),
+		 				-18.0f),
+		 			vec3(130.0f, 0.0f, 65.0f)),
+		 		0.01f,
+		 		white_isotropic);
 
-		// list[7] =
-		// 	std::make_shared<constant_medium>(
-		// 		std::make_shared<translate>(
-		// 			std::make_shared<rotate_y>(
-		// 				std::make_shared<box>(vec3(0, 0, 0), vec3(165, 330, 165), white),
-		// 				15),
-		// 			vec3(265, 0, 295)),
-		// 		0.01,
-		// 		black_isotropic);
+		list[7] =
+		 	std::make_shared<constant_medium>(
+		 		std::make_shared<translate>(
+		 			std::make_shared<rotate_y>(
+		 				std::make_shared<box>(vec3(0.0f, 0.0f, 0.0f), vec3(165.0f, 330.0f, 165.0f), white),
+		 				15.0f),
+		 			vec3(265.0f, 0.0f, 295.0f)),
+		 		0.01f,
+		 		black_isotropic);
 
 		lookfrom = vec3(278.0f, 278.0f, -800.0f);
 		lookat = vec3(278.0f, 278.0f, 0.0f);
@@ -463,13 +464,14 @@ int main(int argc, char* argv[])
 				vec3 subPixels[subPixelCount];
 				serial_for(0, subPixelCount, 1, [&](int s)
 				{
+#ifdef DEBUG_RAY
+					// DEBUG_RAY point at center
+					i = nx / 2;
+					j = ny / 2;
+#endif
+
 					float u = float(i + uniform(engine)) / float(nx);
 					float v = float(j + uniform(engine)) / float(ny);
-
-#ifdef DEBUG_RAY
-					// DEBUG_RAY
-					u = v = 0.5f;
-#endif
 
 					// trace
 					ray r = cam.get_ray(u, v);
@@ -483,8 +485,14 @@ int main(int argc, char* argv[])
 				}
 
 				auto col = sum / static_cast<float>(subPixelCount);
-				// to gamma 2
-				col = vec3(sqrt(col.x), sqrt(col.y), sqrt(col.z));
+
+				if (col.r != 0 && col.g != 0 && col.b != 0)
+				{
+					int aaa = 0;
+				}
+
+				// to gamma 2, and clamp
+				col = vec3(std::min(sqrt(col.x), 1.0f), std::min(sqrt(col.y), 1.0f), std::min(sqrt(col.z), 1.0f));
 
 				// save to canvas
 				canvas[j * nx + i] = col;

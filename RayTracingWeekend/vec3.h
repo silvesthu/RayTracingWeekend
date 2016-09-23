@@ -5,13 +5,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
-#include <emmintrin.h>
 
 class vec3
 {
 public:
 	vec3() { x = 0; y = 0; z = 0; } // initialize it in case...
-	
+
 	// float -> vec3 convesion
 	vec3(float t) { x = t; y = t; z = t; }
 
@@ -34,14 +33,14 @@ public:
 
 	union
 	{
-		struct 
+		struct
 		{
 			union { float x; float r; };
 			union { float y; float g; };
 			union { float z; float b; };
 		};
 		float e[3];
-	};	
+	};
 };
 
 inline vec3 operator+(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy += v2; return copy; }
@@ -51,19 +50,19 @@ inline vec3 operator/(const vec3& v1, const vec3& v2) { vec3 copy = v1; copy /= 
 
 inline float dot(const vec3& v1, const vec3& v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z; }
 
-inline vec3 cross(const vec3& v1, const vec3& v2) 
+inline vec3 cross(const vec3& v1, const vec3& v2)
 {
 	return vec3((v1.y * v2.z - v1.z * v2.y),
-				(-(v1.x * v2.z - v1.z * v2.x)), 
+				(-(v1.x * v2.z - v1.z * v2.x)),
 				(v1.x * v2.y - v1.y * v2.x));
 }
 
-inline vec3 normalize(const vec3& v) 
-{ 
-	vec3 copy = v; 
+inline vec3 normalize(const vec3& v)
+{
+	vec3 copy = v;
 	float length = copy.length();
 	copy /= length;
-	return copy; 
+	return copy;
 }
 
 template <typename T>

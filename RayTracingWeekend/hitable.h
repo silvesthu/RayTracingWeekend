@@ -437,7 +437,7 @@ public:
 				if (rec1.t < 0)
 					rec1.t = 0;
 
-				float distance_inside_boundary = 
+				float distance_inside_boundary =
 					(rec2.t - rec1.t) * r.direction().length();
 				float hit_distance = -(1 / density) * log(uniform(engine));
 
