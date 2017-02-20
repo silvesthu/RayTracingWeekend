@@ -95,8 +95,8 @@ public:
 		float phi = atan2(p.z, p.x);
 		float theta = asin(p.y);
 
-		u = 1 - (phi + M_PI) / (2 * M_PI);
-		v = (theta + M_PI / 2) / M_PI;
+		u = float(1 - (phi + M_PI) / (2 * M_PI));
+		v = float((theta + M_PI / 2) / M_PI);
 	}
 	
 	vec3 center;

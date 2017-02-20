@@ -7,6 +7,8 @@
 class camera
 {
 public:
+	camera() {}
+
 	// vfov is top of bottom in degree
 	camera(const vec3& lookfrom, const vec3& lookat, const vec3& vup, float vfov, float aspect, float aperture, float focus_dist, float t0, float t1)
 	{

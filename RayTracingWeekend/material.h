@@ -37,7 +37,7 @@ inline bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refrac
 	float discriminant = 1.0f - ni_over_nt * ni_over_nt * (1 - dt * dt);
 	if (discriminant > 0)
 	{
-		// refracted = ???
+		// [Check] refracted = ???
 		// don't forget to use normalized uv !!!
 		refracted = ni_over_nt * (uv - n * dt) - n * sqrt(discriminant);
 		return true;
@@ -119,7 +119,7 @@ public:
 			outward_normal = -rec.normal;
 			ni_over_nt = ref_idx;
 
-			// why need ref_idx here ?
+			// [Check] why need ref_idx here ?
 			cosine = ref_idx * dot(r_in.direction(), rec.normal) / r_in.direction().length();
 		}
 		else

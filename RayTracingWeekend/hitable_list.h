@@ -2,18 +2,18 @@
 
 #include "hitable.h"
 
-class hitable_list : public hitable {
+class hitable_list : public hitable 
+{
 public:
 	hitable_list() {}
-	hitable_list(std::shared_ptr<hitable>*l, int n) { list = l; list_size = n; }
-	hitable_list(const std::vector<std::shared_ptr<hitable>>& list)
-		: list(nullptr), list_size(0), saved_list(list) { }
+	hitable_list(const std::vector<std::shared_ptr<hitable>>& l) : list(l) {}
+
 	bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
 	{
 		hit_record temp_rec;
 		bool hit_anything = false;
 		float closet_so_far = t_max;
-		for (int i = 0; i < list_size; i++)
+		for (size_t i = 0; i < list.size(); i++)
 		{
 			if (list[i]->hit(r, t_min, closet_so_far, temp_rec))
 			{
@@ -23,7 +23,7 @@ public:
 			}
 		}
 
-		for (auto& p : saved_list)
+		for (auto& p : list)
 		{
 			if (p->hit(r, t_min, closet_so_far, temp_rec))
 			{
@@ -41,9 +41,7 @@ public:
 		return true;
 	}
 
-	std::shared_ptr<hitable>* list; // store pointer to list only
-	int list_size;
-	std::vector<std::shared_ptr<hitable>> saved_list; // store list (a bit duplication with list though....)
+	std::vector<std::shared_ptr<hitable>> list;
 };
 
 // AABB
