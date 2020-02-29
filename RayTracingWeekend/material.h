@@ -70,6 +70,22 @@ public:
 	virtual ~material() {}
 };
 
+class lambertian_color : public material
+{
+public:
+	explicit lambertian_color(const vec3& a) : albedo(a) {}
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
+	{
+		// reflected ray goes to random direction
+		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+		scattered = ray(rec.p, target - rec.p);
+		attenuation = albedo;
+		return true;
+	}
+
+	vec3 albedo;
+};
+
 class lambertian : public material
 {
 public:
@@ -116,14 +132,33 @@ public:
 		float cosine;
 		if (dot(r_in.direction(), rec.normal) > 0)
 		{
+			// inside -> outside
+
 			outward_normal = -rec.normal;
 			ni_over_nt = ref_idx;
 
-			// [Check] why need ref_idx here ?
-			cosine = ref_idx * dot(r_in.direction(), rec.normal) / r_in.direction().length();
+			// Why need ref_idx here ?
+			// cosine = ref_idx * dot(r_in.direction(), rec.normal) / r_in.direction().length();
+
+			// See http://psgraphics.blogspot.com/2016/12/bug-in-my-schlick-code.html
+			// cosine -> Theta in Schlick approximation should be the larger "angle"
+			// Assume outside is vacuum with lower refractive index,
+			// object has refractive index >= 1, thus outside has the larger angle,
+			// then we need to calculated the refracted angle for Schlick approximation.
+
+			// Now we need to find cosine of the larger angle.
+			// The original implementation in the book scaled the cosine by refractive index,
+			// however it is sine that can be scaled by Snell law as described in the link above.
+			cosine = dot(r_in.direction(), rec.normal) / r_in.direction().length();
+			cosine = sqrt(1 - ref_idx * ref_idx * (1 - cosine * cosine));
+
+			// It is possible that object has lower refractive index, even compared with vacuum
+			// See https://en.wikipedia.org/wiki/Refractive_index#Refractive_index_below_unity
 		}
 		else
 		{
+			// outside -> inside
+
 			outward_normal = rec.normal;
 			ni_over_nt = 1.0f / ref_idx;
 			cosine = -dot(r_in.direction(), rec.normal) / r_in.direction().length();
@@ -146,7 +181,6 @@ public:
 
 		static std::uniform_real_distribution<float> uniform;
 		static std::minstd_rand engine;
-
 		auto rand = uniform(engine);
 		if (rand < reflect_prob)
 		{

@@ -3,17 +3,38 @@
 #include "../hitable_list.h"
 #include "../camera.h"
 
+enum class RenderType
+{
+	Shaded,
+	Normal,
+};
+
+enum class BackgroundType
+{
+	Black,
+	Gradient,
+};
+
 class scene
 {
 public:
 	scene() {}
 	virtual ~scene() {}
 
-	hitable_list& GetWorld() { return world; };
+	void Add(std::shared_ptr<hitable> h) { world.list.push_back(h); }
+
+	const hitable_list& GetWorld() const { return world; };
+	RenderType GetRenderType() const { return render_type; }
+	BackgroundType GetBackgroundType() const { return background_type; }
+
 	camera& GetCamera() { return cam; };
+
 protected:
 	hitable_list world;
 	camera cam;
+
+	RenderType render_type = RenderType::Shaded;
+	BackgroundType background_type = BackgroundType::Gradient;
 };
 
 class light_sample : public scene
@@ -46,12 +67,38 @@ public:
 	}
 };
 
+class dielectric_scene : public scene
+{
+public:
+	dielectric_scene(float aspect) : scene()
+	{
+		Add(std::make_shared<sphere>(vec3(0, 0, -1), 0.5f,
+			std::make_shared<lambertian_color>(vec3(0.1f, 0.2f, 0.5f))));
+		Add(std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f,
+			std::make_shared<lambertian_color>(vec3(0.8f, 0.8f, 0.0f))));
+		Add(std::make_shared<sphere>(vec3(1, 0, -1), 0.5f,
+			std::make_shared<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)));
+		Add(std::make_shared<sphere>(vec3(-1, 0, -1), 0.5f,
+			std::make_shared<dielectric>(1.5f)));
+		Add(std::make_shared<sphere>(vec3(-1, 0, -1), -0.45f,
+			std::make_shared<dielectric>(1.5f)));
+
+		auto lookfrom = vec3(0,0,0);
+		auto lookat = vec3(0,0,-1);
+		auto dist_to_focus = 10.0f;
+		auto aperture = 0.0f;
+		auto vfov = 120.0f;
+
+		this->cam = camera(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), vfov, aspect, aperture, dist_to_focus, 0.0f, 1.0f);
+	}
+};
+
 class cornell_box : public scene
 {
 public:
 	cornell_box(float aspect) : scene()
 	{
-		// cornell box
+		// Cornell box
 		std::shared_ptr<texture> red_tex = std::make_shared<constant_texture>(vec3(0.65f, 0.05f, 0.05f));
 		auto red = std::make_shared<lambertian>(red_tex);
 		std::shared_ptr<texture> white_tex = std::make_shared<constant_texture>(vec3(0.73f, 0.73f, 0.73f));
@@ -103,5 +150,6 @@ public:
 
 		this->world = hitable_list(list);
 		this->cam = camera(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), vfov, aspect, aperture, dist_to_focus, 0.0f, 1.0f);
+		this->background_type = BackgroundType::Black;
 	}
 };

@@ -208,11 +208,6 @@ void MonteCarlo()
 //	std::shared_ptr<texture> groundAlbedo = std::make_shared<checker_texture>(groundAlbedo0, groundAlbedo1);
 //	list[0] = std::make_shared<sphere>(vec3(0, -1000, 0), 1000.0f, std::make_shared<lambertian>(groundAlbedo));
 
-//	std::uniform_real_distribution<float> scene_uniform;
-//	std::minstd_rand scene_engine;
-//	std::uniform_real_distribution<float> time_uniform;
-//	std::minstd_rand time_engine;
-
 //	// Small ones
 //	auto rand = [&](){ return scene_uniform(scene_engine); };
 //	int i = 1;

@@ -42,36 +42,22 @@ const int max_depth = 1;
 const int max_depth = 100;
 #endif
 
-enum class RenderType
-{
-	Shaded,
-	Normal,
-};
-RenderType s_renderType = RenderType::Shaded;
-
-enum class BackgroundType
-{
-	Black,
-	Gradient,
-};
-BackgroundType s_backgroundType = BackgroundType::Black;
-
-vec3 color(const ray& r, const hitable *world, int recursion_depth)
+vec3 color(const ray& r, const scene *s, int recursion_depth)
 {
 	hit_record rec;
 	// z_min = 0 will cause hit same point while reflection
-	if (world->hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
+	if (s->GetWorld().hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
 	{
 		ray scattered;
 		vec3 attenuation;
 		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
 
-		switch (s_renderType)
+		switch (s->GetRenderType())
 		{
 		case RenderType::Shaded:
 			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
 			{
-				return emitted + attenuation * color(scattered, world, recursion_depth + 1);
+				return emitted + attenuation * color(scattered, s, recursion_depth + 1);
 			}
 			else
 			{
@@ -85,7 +71,7 @@ vec3 color(const ray& r, const hitable *world, int recursion_depth)
 	}
 	else
 	{
-		switch (s_backgroundType)
+		switch (s->GetBackgroundType())
 		{
 			case BackgroundType::Gradient:
 			{
@@ -104,9 +90,6 @@ vec3 color(const ray& r, const hitable *world, int recursion_depth)
 	}
 }
 
-#ifndef _WIN32
-typedef __int64_t __int64;
-#endif
 // https://msdn.microsoft.com/en-us/library/dd728080.aspx
 template <class Function>
 __int64 time_call(Function&& f)
@@ -133,8 +116,11 @@ void serial_for(_Index_type _First, _Index_type _Last, _Index_type _Step, const 
 template <typename _Index_type, typename _Function>
 void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Function& _Func)
 {
-	Concurrency::parallel_for(_First, _Last, _Step, _Func);
-	//serial_for(_First, _Last, _Step, _Func);
+	// Parallel gives different result every time as RNG should not used across threads
+	// Switch to Serial to get stable result
+
+	//Concurrency::parallel_for(_First, _Last, _Step, _Func);
+	serial_for(_First, _Last, _Step, _Func);
 }
 
 int main(int argc, char* argv[])
@@ -145,11 +131,12 @@ int main(int argc, char* argv[])
 	//MonteCarlo();
 	//return 0;
 
-	typedef cornell_box scene_type;
+	typedef dielectric_scene scene_type;
+	//typedef cornell_box scene_type;
 	//typedef light_sample scene_type;
+
 	scene_type scene(nx * 1.0f / ny);
 	auto& cam = scene.GetCamera();
-	auto& world = scene.GetWorld();
 
 	std::uniform_real_distribution<float> uniform;
 	std::minstd_rand engine;
@@ -176,7 +163,7 @@ int main(int argc, char* argv[])
 
 					// trace
 					ray r = cam.get_ray(u, v);
-					subPixels[s] = color(r, &world, 0);
+					subPixels[s] = color(r, &scene, 0);
 				});
 
 				vec3 sum(0, 0, 0);
@@ -196,7 +183,7 @@ int main(int argc, char* argv[])
 		});
 	});
 
-	std::ofstream out("1.ppm");
+	std::ofstream out("x64\\1.ppm");
 	std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
 	std::cout.rdbuf(out.rdbuf()); //redirect std::cout
 
@@ -223,14 +210,14 @@ int main(int argc, char* argv[])
 	});
 
 	std::cout.rdbuf(coutbuf); // reset to standard output again
-	std::cout << "Trace: " << elapsedTrace << std::endl;
-	std::cout << "Write: " << elapsedWrite << std::endl;
+	std::cout << "Trace: " << elapsedTrace << "ms" << std::endl;
+	std::cout << "Write: " << elapsedWrite << "ms" << std::endl;
 
 	out.close();
 
 	// PPM -> PNG
-	system("imagick 1.ppm 1.png");
-	system("start 1.png");
+	system("magick x64\\1.ppm x64\\1.png");
+	system("start x64\\1.png");
 
 	return 0;
 }

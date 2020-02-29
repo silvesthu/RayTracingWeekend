@@ -42,9 +42,6 @@ public:
 	bvh_node() {}
 	bvh_node(hitable **l, int n, float time0, float time1)
 	{
-		static std::uniform_real_distribution<float> uniform;
-		static std::minstd_rand engine;
-
 		auto comparer_gen = [](int i)
 		{
 			return [=](hitable* lhs, hitable* rhs)
@@ -61,7 +58,9 @@ public:
 		};
 
 		// sort along axis
-		int axis = std::max(int(3 * uniform(engine)), 2); // get 0, 1, 2
+		static std::uniform_int_distribution<int> uniform(0, 2);
+		static std::minstd_rand engine;
+		int axis = uniform(engine); // get 0, 1, 2
 		std::sort(&l[0], &l[n - 1], comparer_gen(axis));
 
 		if (n == 1)
