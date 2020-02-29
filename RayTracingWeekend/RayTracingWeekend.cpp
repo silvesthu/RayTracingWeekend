@@ -1,12 +1,8 @@
 #define NOMINMAX
 
-#ifdef _WIN32
-	#include <crtdbg.h>
-	#include <ppl.h>
-	using namespace concurrency;
-#else
-	#include <tbb/tbb.h>
-#endif
+#include <crtdbg.h>
+#include <ppl.h>
+using namespace concurrency;
 
 #include <iostream>
 #include <fstream>
@@ -27,9 +23,6 @@
 #include "hitable_list.h"
 #include "camera.h"
 #include "material.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 #include "Scene\scene.h"
 #include "Scene\cornell_box.h"
@@ -140,20 +133,13 @@ void serial_for(_Index_type _First, _Index_type _Last, _Index_type _Step, const 
 template <typename _Index_type, typename _Function>
 void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Function& _Func)
 {
-#ifdef _WIN32
 	Concurrency::parallel_for(_First, _Last, _Step, _Func);
-#else
-	// only 2 times faster...
-	tbb::parallel_for(_First, _Last, _Step, _Func);
-#endif
 	//serial_for(_First, _Last, _Step, _Func);
 }
 
 int main(int argc, char* argv[])
 {
-#ifdef _WIN32
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
 
 	// hijack main to test pdf
 	//MonteCarlo();
@@ -242,14 +228,9 @@ int main(int argc, char* argv[])
 
 	out.close();
 
-	// use ImageMagick to convert into easy to check format
-#ifdef _WIN32
-	system("convert 1.ppm 1.png");
+	// PPM -> PNG
+	system("imagick 1.ppm 1.png");
 	system("start 1.png");
-#else
-	system("/usr/local/bin/convert 1.ppm 1.png");
-	system("open 1.png");
-#endif
 
 	return 0;
 }
