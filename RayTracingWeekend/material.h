@@ -152,6 +152,13 @@ public:
 			cosine = dot(r_in.direction(), rec.normal) / r_in.direction().length();
 			cosine = sqrt(1 - ref_idx * ref_idx * (1 - cosine * cosine));
 
+			// As why it should be the larger angle,
+			// Schlick's approximation is based on a formulation of non-polarized Fresnel.
+			// http://www.cs.virginia.edu/~jdl/bib/appearance/analytic%20models/schlick94b.pdf
+			// Which is from Peter Shirley's PhD thesis!
+			// https://www.cs.utah.edu/~shirley/papers/dissertation.pdf
+			// It seems Schlick assume n_i is 1, thus u is cosine of angle on vacuum side.
+
 			// It is possible that object has lower refractive index, even compared with vacuum
 			// See https://en.wikipedia.org/wiki/Refractive_index#Refractive_index_below_unity
 		}
