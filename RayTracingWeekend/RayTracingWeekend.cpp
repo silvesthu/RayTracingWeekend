@@ -24,10 +24,7 @@ using namespace concurrency;
 #include "camera.h"
 #include "material.h"
 
-#include "Scene\scene.h"
-#include "Scene\cornell_box.h"
-
-#include "MonteCarlo\montecarlo.h"
+#include "Scene/scene.h"
 
 const int size_multipler = 4;
 const int subPixelCount = 10;
@@ -119,20 +116,16 @@ void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Funct
 	// Parallel gives different result every time as RNG should not used across threads
 	// Switch to Serial to get stable result
 
-	//Concurrency::parallel_for(_First, _Last, _Step, _Func);
-	serial_for(_First, _Last, _Step, _Func);
+	Concurrency::parallel_for(_First, _Last, _Step, _Func);
+	//serial_for(_First, _Last, _Step, _Func);
 }
 
 int main(int argc, char* argv[])
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	// hijack main to test pdf
-	//MonteCarlo();
-	//return 0;
-
-	typedef dielectric_scene scene_type;
-	//typedef cornell_box scene_type;
+	//typedef dielectric_scene scene_type;
+	typedef cornell_box scene_type;
 	//typedef light_sample scene_type;
 
 	scene_type scene(nx * 1.0f / ny);

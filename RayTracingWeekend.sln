@@ -1,34 +1,50 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.1000
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RayTracingWeekend", "RayTracingWeekend\RayTracingWeekend.vcxproj", "{65602540-7777-4ABB-AE55-4A9DD39229E1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CppTest", "CppTest\CppTest.vcxproj", "{D6C92D6F-B465-4D47-B0FE-02923B9610AD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MonteCarlo", "MonteCarlo\MonteCarlo.vcxproj", "{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{65602540-7777-4ABB-AE55-4A9DD39229E1}.Debug|x64.ActiveCfg = Debug|x64
 		{65602540-7777-4ABB-AE55-4A9DD39229E1}.Debug|x64.Build.0 = Debug|x64
+		{65602540-7777-4ABB-AE55-4A9DD39229E1}.Debug|x86.ActiveCfg = Debug|x64
 		{65602540-7777-4ABB-AE55-4A9DD39229E1}.Release|x64.ActiveCfg = Release|x64
 		{65602540-7777-4ABB-AE55-4A9DD39229E1}.Release|x64.Build.0 = Release|x64
+		{65602540-7777-4ABB-AE55-4A9DD39229E1}.Release|x86.ActiveCfg = Release|x64
 		{D6C92D6F-B465-4D47-B0FE-02923B9610AD}.Debug|x64.ActiveCfg = Debug|x64
 		{D6C92D6F-B465-4D47-B0FE-02923B9610AD}.Debug|x64.Build.0 = Debug|x64
+		{D6C92D6F-B465-4D47-B0FE-02923B9610AD}.Debug|x86.ActiveCfg = Debug|x64
 		{D6C92D6F-B465-4D47-B0FE-02923B9610AD}.Release|x64.ActiveCfg = Release|x64
 		{D6C92D6F-B465-4D47-B0FE-02923B9610AD}.Release|x64.Build.0 = Release|x64
+		{D6C92D6F-B465-4D47-B0FE-02923B9610AD}.Release|x86.ActiveCfg = Release|x64
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Debug|x64.ActiveCfg = Debug|x64
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Debug|x64.Build.0 = Debug|x64
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Debug|x86.ActiveCfg = Debug|Win32
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Debug|x86.Build.0 = Debug|Win32
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Release|x64.ActiveCfg = Release|x64
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Release|x64.Build.0 = Release|x64
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Release|x86.ActiveCfg = Release|Win32
+		{93BF3FFE-3D89-471A-8E17-AA66CBC2253A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63C14DC4-9D03-4CEB-8B76-11E2E86AF76F}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
