@@ -3,7 +3,7 @@
 #include "hitable.h"
 #include "material.h"
 
-struct trivial_strategy
+struct movement_none
 {
 	vec3 center(const vec3& center0, float time) const
 	{
@@ -17,7 +17,7 @@ struct trivial_strategy
 	}
 };
 
-struct moving_strategy
+struct movement_linear
 {
 	vec3 center(const vec3& center0, float time) const
 	{
@@ -37,7 +37,7 @@ struct moving_strategy
 	float time1;
 };
 
-template<typename Strategy>
+template<typename movement_type>
 class sphere_base : public hitable
 {
 public:
@@ -45,7 +45,7 @@ public:
 	sphere_base(vec3 cen, float r, std::shared_ptr<material> m) : center(cen), radius(r), mat(m) {}
 	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
 	{
-		vec3 currentCenter = strategy.center(center, r.time());
+		vec3 currentCenter = movement.center(center, r.time());
 		vec3 oc = r.origin() - currentCenter;
 		float a = dot(r.direction(), r.direction());
 		float b = dot(oc, r.direction());
@@ -82,12 +82,12 @@ public:
 
 	bool bounding_box(float t0, float t1, aabb& box) const override
 	{
-		return strategy.bounding_box(center, radius, t0, t1, box);
+		return movement.bounding_box(center, radius, t0, t1, box);
 	}
 	
-	void update_strategy(const Strategy& s)
+	void set_movement(const movement_type& m)
 	{
-		strategy = s;
+		movement = m;
 	}
 
 	static void get_sphere_uv(const vec3& p, float& u, float& v)
@@ -102,8 +102,8 @@ public:
 	vec3 center;
 	float radius;
 	std::shared_ptr<material> mat;
-	Strategy strategy;
+	movement_type movement;
 };
 
-typedef sphere_base<trivial_strategy> sphere;
-typedef sphere_base<moving_strategy> moving_sphere;
+typedef sphere_base<movement_none> sphere;
+typedef sphere_base<movement_linear> moving_sphere;

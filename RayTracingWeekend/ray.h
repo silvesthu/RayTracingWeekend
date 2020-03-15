@@ -6,7 +6,7 @@ class ray
 {
 public:
 	ray() {};
-	ray(const vec3& a, const vec3 &b, float ti = 0.0f) { _origin = a; _direction = b; _time = ti; }
+	ray(const vec3& a, const vec3 &b, float ti) { _origin = a; _direction = b; _time = ti; }
 
 	vec3 origin() const { return _origin; }
 	vec3 direction() const { return _direction; }
@@ -14,6 +14,7 @@ public:
 
 	float time() const { return _time; }
 
+private:
 	vec3 _origin;
 	vec3 _direction;
 

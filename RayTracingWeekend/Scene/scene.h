@@ -93,10 +93,88 @@ public:
 	}
 };
 
-class cornell_box : public scene
+class random_balls_scene : public scene
 {
 public:
-	cornell_box(float aspect) : scene()
+	random_balls_scene(float aspect) : scene()
+	{
+		std::uniform_real_distribution<float> uniform;
+		std::minstd_rand engine;
+
+		// The ground
+		std::shared_ptr<texture> groundAlbedo = std::make_shared<constant_texture>(vec3(0.5f, 0.5f, 0.5f));
+		Add(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.0f, std::make_shared<lambertian>(groundAlbedo)));
+
+		// Small ones
+		int i = 1;
+		for (int a = -11; a < 11; a++)
+			for (int b = -11; b < 11; b++)
+			{
+				float choose_mat = uniform(engine);
+				vec3 center(a + 0.9f * uniform(engine), 0.2f, b + 0.9f * uniform(engine));
+				if ((center - vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f)
+				{
+					if (choose_mat < 0.8f) // diffuse
+					{
+						vec3 color;
+						color.r = uniform(engine) * uniform(engine);
+						color.g = uniform(engine) * uniform(engine);
+						color.b = uniform(engine) * uniform(engine);
+						std::shared_ptr<texture> albedo = std::make_shared<constant_texture>(color);
+						bool moving = true;
+						if (moving)
+						{
+							std::shared_ptr<moving_sphere> s = std::make_shared<moving_sphere>(center, 0.2f, std::make_shared<lambertian>(albedo));
+							movement_linear m;
+							m.center1 = center + vec3(0.0f, 0.5f * uniform(engine), 0.0f);
+							m.time0 = 0.0f;
+							m.time1 = 1.0f;
+							s->set_movement(m);
+							Add(s);
+						}
+						else
+							Add(std::make_shared<sphere>(center, 0.2f, std::make_shared<lambertian>(albedo)));
+					}
+					else
+					{
+						if (choose_mat < 0.95) // metal
+						{
+							vec3 color;
+							color.r = 0.5f * (1 + uniform(engine));
+							color.g = 0.5f * (1 + uniform(engine));
+							color.b = 0.5f * (1 + uniform(engine));
+							float fuzz = 0.5f * uniform(engine);
+							Add(std::make_shared<sphere>(center, 0.2f, std::make_shared<metal>(color, fuzz)));
+						}
+						else // glass
+						{
+							vec3 color;
+							float ref_idx = 1.5f;
+							Add(std::make_shared<sphere>(center, 0.2f, std::make_shared<dielectric>(ref_idx)));
+						}
+					}
+				}
+			}
+
+		// Big ones
+		Add(std::make_shared<sphere>(vec3(0,1,0), 1.0f, std::make_shared<dielectric>(1.5f)));
+		Add(std::make_shared<sphere>(vec3(-4,1,0), 1.0f, std::make_shared<lambertian>(std::make_shared<constant_texture>(vec3(0.4f, 0.2f, 0.1f)))));
+		Add(std::make_shared<sphere>(vec3(4,1,0), 1.0f, std::make_shared<metal>(vec3(0.7f, 0.6f, 0.5f), 0.0f)));
+
+		// Camera
+		auto lookfrom = vec3(13, 2, 3);
+		auto lookat = vec3(0, 0, 0);
+		auto dist_to_focus = 10.0f;
+		auto aperture = 0.0f;
+		auto vfov = 20.0f;
+		this->cam = camera(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), vfov, aspect, aperture, dist_to_focus, 0.0f, 1.0f);
+	}
+};
+
+class cornell_box_scene : public scene
+{
+public:
+	cornell_box_scene(float aspect) : scene()
 	{
 		// Cornell box
 		std::shared_ptr<texture> red_tex = std::make_shared<constant_texture>(vec3(0.65f, 0.05f, 0.05f));

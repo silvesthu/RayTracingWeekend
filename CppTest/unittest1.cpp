@@ -33,7 +33,7 @@ namespace CppTest
 
 		TEST_METHOD(_ctor)
 		{
-			auto r = ray(vec3(1, 1, 1), vec3(2, 2, 2));
+			auto r = ray(vec3(1, 1, 1), vec3(2, 2, 2), 0.0f);
 			Assert::AreEqual(r.point_at_parameter(3).x, 7.0f);
 			Assert::AreEqual(r.point_at_parameter(3).y, 7.0f);
 			Assert::AreEqual(r.point_at_parameter(3).z, 7.0f);
@@ -73,23 +73,23 @@ namespace CppTest
 		{
 			Assert::IsTrue(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0,0,0), vec3(1,1,1)), 0, FLT_MAX));
+					ray(vec3(0,0,0), vec3(1,1,1), 0.0f), 0, FLT_MAX));
 
 			Assert::IsFalse(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0, 0, 0), -vec3(1, 1, 1)), 0, FLT_MAX));
+					ray(vec3(0, 0, 0), -vec3(1, 1, 1), 0.0f), 0, FLT_MAX));
 
 			Assert::IsTrue(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(3, 3, 3), vec3(0, 1, 0)), 0, FLT_MAX));
+					ray(vec3(3, 3, 3), vec3(0, 1, 0), 0.0f), 0, FLT_MAX));
 
 			Assert::IsTrue(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0, 3, 0), vec3(1, 0, 1)), 0, FLT_MAX));
+					ray(vec3(0, 3, 0), vec3(1, 0, 1), 0.0f), 0, FLT_MAX));
 
 			Assert::IsFalse(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0, 5, 0), vec3(1, 0, 1)), 0, FLT_MAX));
+					ray(vec3(0, 5, 0), vec3(1, 0, 1), 0.0f), 0, FLT_MAX));
 		}
 
 		TEST_METHOD(_surrounding)

@@ -78,7 +78,7 @@ public:
 	{
 		// reflected ray goes to random direction
 		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-		scattered = ray(rec.p, target - rec.p);
+		scattered = ray(rec.p, target - rec.p, r_in.time());
 		attenuation = albedo;
 		return true;
 	}
@@ -89,12 +89,12 @@ public:
 class lambertian : public material
 {
 public:
-	explicit lambertian(std::shared_ptr<texture>& a) : albedo(a) {}
+	explicit lambertian(std::shared_ptr<texture> a) : albedo(a) {}
 	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
 	{
 		// reflected ray goes to random direction
 		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-		scattered = ray(rec.p, target - rec.p);
+		scattered = ray(rec.p, target - rec.p, r_in.time());
 		attenuation = albedo->value(rec.u, rec.v, rec.p); //
 		return true;
 	}
@@ -110,7 +110,7 @@ public:
 	{
 		// reflected ray goes to mirror-reflected direction
 		vec3 reflected = reflect(normalize(r_in.direction()), rec.normal);
-		scattered = ray(rec.p, reflected + fuzz * random_in_unit_sphere());
+		scattered = ray(rec.p, reflected + fuzz * random_in_unit_sphere(), r_in.time());
 		attenuation = albedo;
 		return (dot(scattered.direction(), rec.normal) > 0); // ray from front face ? make no difference in this sample
 	}
@@ -182,7 +182,7 @@ public:
 		else
 		{
 			// total internal reflection
-			scattered = ray(rec.p, reflected);
+			scattered = ray(rec.p, reflected, r_in.time());
 			reflect_prob = 1.0f;
 		}
 
@@ -191,11 +191,11 @@ public:
 		auto rand = uniform(engine);
 		if (rand < reflect_prob)
 		{
-			scattered = ray(rec.p, reflected);
+			scattered = ray(rec.p, reflected, r_in.time());
 		} 
 		else
 		{
-			scattered = ray(rec.p, refracted);
+			scattered = ray(rec.p, refracted, r_in.time());
 		}
 
 		return true;
@@ -235,7 +235,7 @@ public:
 	bool scatter(const ray& r_in, const hit_record& rec, 
 		vec3& attenuation, ray& scattered) const override
 	{
-		scattered = ray(rec.p, random_in_unit_sphere());
+		scattered = ray(rec.p, random_in_unit_sphere(), r_in.time());
 		attenuation = albedo->value(rec.u, rec.v, rec.p);
 		return true;
 	}
