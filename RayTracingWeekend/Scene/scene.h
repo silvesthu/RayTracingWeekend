@@ -183,13 +183,13 @@ public:
 		auto white = std::make_shared<lambertian>(white_tex);
 		std::shared_ptr<texture> green_tex = std::make_shared<constant_texture>(vec3(0.12f, 0.45f, 0.15f));
 		auto green = std::make_shared<lambertian>(green_tex);
-		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(7.0f, 7.0f, 7.0f));
+		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15.0f, 15.0f, 15.0f));
 		auto light = std::make_shared<diffuse_light>(light_tex);
 
 		std::vector<std::shared_ptr<hitable>> list;
 
 		list.push_back(
-			std::make_shared<xz_rect>(113.0f, 443.0f, 127.0f, 432.0f, 554.0f, light));
+			std::make_shared<xz_rect>(213.0f, 343.0f, 227.0f, 332.0f, 554.0f, light));
 
 		list.push_back(
 			std::make_shared<flip_normals>(

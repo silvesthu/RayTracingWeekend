@@ -12,7 +12,7 @@ inline vec3 random_in_unit_sphere()
 
 	vec3 p = { 0, 0, 0 };
 	do {
-		auto random_vector = vec3(uniform(engine), uniform(engine), uniform(engine));
+		vec3 random_vector(uniform(engine), uniform(engine), uniform(engine));
 		p = 2.0f * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
 	} while (dot(p, p) >= 1.0f); // unit sphere
 	return p;

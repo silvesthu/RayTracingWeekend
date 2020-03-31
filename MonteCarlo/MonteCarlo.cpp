@@ -4,143 +4,202 @@
 #include <cmath>
 
 #include "../RayTracingWeekend/vec3.h"
+#include "../RayTracingWeekend/material.h"
 
-template <typename XGetter, typename PDF>
-void MonteCarlo1D(int N, XGetter xGetter, PDF pdf)
+void MonteCarlo_Estimate_PI()
+{
+	// See https://www.openfoam.com/documentation/guides/latest/api/Rand48_8H_source.html
+	// for implementation of drand48 with std::linear_congruential_engine (underlying type of std::minstd_rand)
+
+	std::uniform_real_distribution<float> uniform;
+	std::minstd_rand engine;
+
+	int N = 1000;
+	int inside_circle = 0;
+	for (int i = 0; i < N; i++)
+	{
+		float x = 2 * uniform(engine) - 1;
+		float y = 2 * uniform(engine) - 1;
+		
+		if (x * x + y * y < 1)
+			inside_circle++;
+	}
+
+	std::cout << "Estimate of PI = " << 4 * float(inside_circle) / N << "\n";
+}
+
+void MonteCarlo_EstimatePI_Forever()
 {
 	std::uniform_real_distribution<float> uniform;
 	std::minstd_rand engine;
 
-	float sum = 0;
-	for (int i = 0; i < N; i++)
+	int runs = 0;
+	int inside_circle = 0;
+	while (true)
 	{
-		float x = xGetter(uniform(engine));
-		sum += (x * x) / pdf(x); // weight
+		runs++;
+		
+		float x = 2 * uniform(engine) - 1;
+		float y = 2 * uniform(engine) - 1;
+
+		if (x * x + y * y < 1)
+			inside_circle++;
+		
+		if (runs % 100000 == 0)
+			std::cout << "Estimate of PI = " << 4 * float(inside_circle) / runs << "\n";
 	}
-
-	auto result = sum / N;
-
-	std::cout << __FUNCTION__ << std::endl;
-	std::cout << "  I = " << result << std::endl;
-	auto groundTruth = 8.0f / 3.0f;
-	std::cout << "  Error = " << groundTruth - result << " from GroundTruth = " << groundTruth << std::endl;
 }
 
-// from http://www.scratchapixel.com/lessons/mathematics-physics-for-computer-graphics/monte-carlo-methods-mathematical-foundations/inverse-transform-sampling-method
-template <int N, int SECTION_COUNT, typename PDF>
-void MonteCarlo1DDiscreteSample(PDF pdf_func, float minBound = 0.0f, float maxBound = 1.0f)
+void MonteCarlo_EstimatePI_Stratified()
 {
 	std::uniform_real_distribution<float> uniform;
 	std::minstd_rand engine;
 
-	float section = (maxBound - minBound) / SECTION_COUNT;
-
-	// Calculate CDF
-	float cdf[SECTION_COUNT + 1];
-	cdf[0] = 0; // This ensure CDF starts 0 (which corrsponds with the extra constant when integral PDF to CDF)
-	for (int i = 1; i < SECTION_COUNT; i++)
+	int inside_circle = 0;
+	int inside_circle_stratified = 0;
+	int sqrt_N = 10000;
+	for (int i = 0; i < sqrt_N; i++)
 	{
-		float x = minBound + i * section;
-		float pdf = pdf_func(x);
-		float pdf_x = pdf * section;
-		cdf[i] = cdf[i - 1] + pdf_x;
-	}
-	cdf[SECTION_COUNT] = 1; // Be careful invalid PDF may still cause CDF goes to value other than 1, which is incorrect.
+		for (int j = 0; j < sqrt_N; j++)
+		{
+			// Random
+			float x = 2 * uniform(engine) - 1;
+			float y = 2 * uniform(engine) - 1;
 
-	// Take samples and put into appropriate bin
-	float sum = 0;
-	int bins[SECTION_COUNT] = { 0 };
-	for (int i = 0; i < N; i++)
-	{
-		float r = uniform(engine);
-		float* ptr = std::lower_bound(cdf, cdf + SECTION_COUNT + 1, r); // Prepare for inverse transform
-		int off = std::max(0, (int)(ptr - cdf - 1));
-		float t = (r - cdf[off]) / (cdf[off + 1] - cdf[off]); // Use similar triangle to avoid real inverse
-		float x = (off + t) / (float)(SECTION_COUNT);
-		float result = minBound + (maxBound - minBound) * x;
-		bins[(int)(result / section)]++;
+			if (x * x + y * y < 1)
+				inside_circle++;
+
+			// Jitter from uniform grid
+			x = 2 * ((i + uniform(engine)) / sqrt_N) - 1;
+			y = 2 * ((j + uniform(engine)) / sqrt_N) - 1;
+
+			if (x * x + y * y < 1)
+				inside_circle_stratified++;
+		}
 	}
 
-	// Output bins
-	for (int i = 0; i < SECTION_COUNT; i++)
-	{
-		//std::cout << (minBound + section * i) << "," << bins[i] << std::endl;
-	}
+	std::cout << "Regular		Estimate of Pi = " <<
+		4 * float(inside_circle) / (sqrt_N * sqrt_N) << "\n";
+	std::cout << "Stratified	Estimate of Pi = " <<
+		4 * float(inside_circle_stratified) / (sqrt_N * sqrt_N) << "\n";
 }
 
-template <int N, typename PDF>
-void MonteCarloSpherical(PDF pdf)
+void MonteCarloIntegration_Uniform()
 {
-	auto normalized_random_in_unit_sphere = []()
+	std::uniform_real_distribution<float> uniform;
+	std::minstd_rand engine;
+
+	// integrate(x**2, (x, 0, 2))
+	// with uniform distribution
+
+	int inside_circle = 0;
+	int N = 1000000;
+	float sum = 0.0f;
+	for (int i = 0; i < N; i++)
+	{
+		float x = 2 * uniform(engine);
+		sum += x * x;
+	}
+	std::cout << "I = " << 2 * sum / N << "\n";
+
+	// N uniform distributed thin bars with width = 1 / N, height = x * x
+}
+
+void MonteCarloIntegration_PDF1()
+{
+	std::uniform_real_distribution<float> uniform;
+	std::minstd_rand engine;
+
+	auto pdf = [](float x) { return 0.5f * x; };
+
+	int N = 1000000;
+	float sum = 0.0f;
+	for (int i = 0; i < N; i++)
+	{
+		// pdf: 0.5*x
+		// cdf: y = 0.25*x^2 by integrate(0.5*x)
+		// inverse cdf: x = sqrt(4*y) = 2*sqrt(y) by solve(Eq(y, integrate(0.5*x)), x)
+		float x = sqrt(4 * uniform(engine));
+		sum += x * x / pdf(x);
+	}
+
+	std::cout << "I = " << sum / N << "\n";
+}
+
+void MonteCarloIntegration_PDF2()
+{
+	std::uniform_real_distribution<float> uniform;
+	std::minstd_rand engine;
+
+	auto pdf = [](float x) { return 3.0f * x * x / 8.0f; };
+
+	int N = 1000000;
+	float sum = 0.0f;
+	for (int i = 0; i < N; i++)
+	{
+		// pdf: 3*x*x/8
+		// cdf: y = x^3/8 by integrate(3*x*x/8)
+		// inverse cdf: x = 2*y^(1/3)  by solve(Eq(y, integrate(3*x*x/8)), x)
+		float x = pow(8.0f * uniform(engine), 1.0f / 3.0f);
+		sum += x * x / pdf(x);
+	}
+
+	std::cout << "I = " << sum / N << "\n";
+}
+
+void MonteCarloIntegration_Sphere()
+{
+	auto random_on_unit_sphere = []()
 	{
 		static std::uniform_real_distribution<float> uniform;
 		static std::minstd_rand engine;
 
 		vec3 p = { 0, 0, 0 };
 		do {
-			auto random_vector = vec3(uniform(engine), uniform(engine), uniform(engine));
+			vec3 random_vector(uniform(engine), uniform(engine), uniform(engine));
 			p = 2.0f * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
 		} while (dot(p, p) >= 1.0f); // unit sphere
 		return normalize(p);
 	};
 
-	float sum = 0;
+	auto pdf = [](const vec3& p) { return 1.0f / (4.0f * (float)M_PI); };
+
+	int N = 1000000;
+	float sum = 0.0f;
 	for (int i = 0; i < N; i++)
 	{
-		vec3 d = normalized_random_in_unit_sphere();
-		float cosine_squared = d.z * d.z;
-		sum += cosine_squared / pdf(d);
-	}
-	std::cout << __FUNCTION__ << std::endl;
-	std::cout << "  I = " << sum / N << std::endl;
-}
-
-void MonteCarlo()
-{
-	// Analytically
-	{
-		const int N = 100;
-
-		// p(r) = 0.5f
-		// P(r) = 0.5f * r <- integral of p(r)
-		// e = P^-1(random) = 2 * r
-		MonteCarlo1D(N, [](auto r) { return 2 * r; }, [](auto x) { return 0.5f; });
-
-		// p(r) = r / 2
-		// P(r) = 1/4 * r^2 <- integral of p(r)
-		// e = P^-1(random) = sqrt(4 * random)
-		MonteCarlo1D(N, [](auto r) { return sqrt(4 * r); }, [](auto x) { return x / 2.0f; });
-
-		// p(r) = (3/8) * x^2
-		// P(r) = (1/8) * x^3 <- integral of p(r)
-		// e = P^-1(random) = pow(8x, 1/3)
-		MonteCarlo1D(N, [](auto r) { return std::powf(8 * r, 1.0f / 3.0f); }, [](auto x) { return 3.0f * x * x / 8.0f; });
+		vec3 d = random_on_unit_sphere();
+		float cosine_suqared = d.z * d.z;
+		sum += cosine_suqared / pdf(d);
 	}
 
-	// Discrete
-	{
-		const int SampleCount = 100000;
-		const int SectionCount = 1000;
+	std::cout << "I = " << sum / N << "\n";
 
-		// p(r) = sin(x * 2 * pi) + 1 <- PDF
-		// P(r) = integral(p(r))<- CDF
-		MonteCarlo1DDiscreteSample<SampleCount, SectionCount>([](auto r)
-			{
-				return float(sin(r * M_PI * 2) + 1);
-			});
-	}
-
-	// Spherical
-	{
-		const int N = 1000000;
-
-		// p(r) = 1 / (4 * pi) <- PDF
-		MonteCarloSpherical<N>([](const vec3& p) { return 1 / (4 * (float)M_PI); });
-	}
+	// integrate cos(theta)^2 over sphere
+	// = integrate(integrate(cos(theta)**2*sin(theta), (theta, 0, pi)), (phi, 0, pi*2))
+	// = 4*pi/3	
+	// https://www.khanacademy.org/math/multivariable-calculus/integrating-multivariable-functions/triple-integrals-a/a/triple-integrals-in-spherical-coordinates
 }
 
 int main()
 {
-	MonteCarlo();
+	// MonteCarlo_Estimate_PI();
+	// MonteCarlo_EstimatePI_Forever();
+	// MonteCarlo_EstimatePI_Stratified();
+
+	// MonteCarloIntegration_Uniform();
+
+	// https://en.wikipedia.org/wiki/Inverse_transform_sampling#Proof_of_correctness
+	// Probability of result distribution F^-1(U)
+	// = Pr(F^-1(U) <= x)	// Apply F(x) on both side
+	// = Pr(U <= F(x))		// Pr(U <= y) = y as U is in uniform distribution
+	// = F(x)				// The CDF
+	// => F^-1(U) is in distribution of the PDF
+
+	// MonteCarloIntegration_PDF1();
+	// MonteCarloIntegration_PDF2();
+
+	// MonteCarloIntegration_Sphere();
+
 	return 0;
 }

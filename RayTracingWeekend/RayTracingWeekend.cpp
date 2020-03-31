@@ -27,7 +27,7 @@ using namespace concurrency;
 #include "Scene/scene.h"
 
 const int size_multipler = 4;
-const int subPixelCount = 10;
+const int subPixelCount = 160;
 
 const int nx = 100 * size_multipler;
 const int ny = 100 * size_multipler;
@@ -125,8 +125,8 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	//typedef dielectric_scene scene_type;
-	typedef random_balls_scene scene_type;
-	//typedef cornell_box_scene scene_type;
+	//typedef random_balls_scene scene_type;
+	typedef cornell_box_scene scene_type;
 	//typedef light_sample scene_type;
 
 	scene_type scene(nx * 1.0f / ny);
