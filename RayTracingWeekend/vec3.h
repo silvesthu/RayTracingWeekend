@@ -84,3 +84,25 @@ inline vec3 lerp(vec3 from, vec3 to, float t)
 {
 	return (1.0f - t) * to + t * from;
 }
+
+inline vec3 random_in_unit_sphere()
+{
+	static std::uniform_real_distribution<float> uniform;
+	static std::minstd_rand engine;
+
+	vec3 p = { 0, 0, 0 };
+	do {
+		vec3 random_vector(uniform(engine), uniform(engine), uniform(engine));
+		p = 2.0f * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
+	} while (dot(p, p) >= 1.0f); // unit sphere
+	return p;
+}
+
+inline vec3 random_in_hemisphere(const vec3& normal)
+{
+	vec3 in_unit_sphere = random_in_unit_sphere();
+	if (dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
+		return in_unit_sphere;
+	else
+		return -in_unit_sphere;
+}

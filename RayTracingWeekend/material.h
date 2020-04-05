@@ -5,19 +5,6 @@
 #include "hitable.h"
 #include "texture.h"
 
-inline vec3 random_in_unit_sphere()
-{
-	static std::uniform_real_distribution<float> uniform;
-	static std::minstd_rand engine;
-
-	vec3 p = { 0, 0, 0 };
-	do {
-		vec3 random_vector(uniform(engine), uniform(engine), uniform(engine));
-		p = 2.0f * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
-	} while (dot(p, p) >= 1.0f); // unit sphere
-	return p;
-}
-
 inline vec3 reflect(const vec3& v, const vec3& n)
 {
 	return v - 2.0f * dot(v, n) * n;
@@ -63,27 +50,26 @@ class material
 {
 public:
 	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const = 0;
+	virtual bool scatter_pdf(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& pdf) const
+	{
+		// p(direction): how we samples
+		pdf = 1.0f;
+
+		return scatter(r_in, rec, attenuation, scattered);
+	}
+
+	virtual double scattering_pdf(const ray& r_in, const hit_record& rec, ray& scattered) const
+	{
+		// s(direction): how light scatters
+		return 1.0f;
+	}
+
 	virtual vec3 emitted(float u, float v, const vec3& p) const
 	{
 		return vec3(0, 0, 0);
 	}
+
 	virtual ~material() {}
-};
-
-class lambertian_color : public material
-{
-public:
-	explicit lambertian_color(const vec3& a) : albedo(a) {}
-	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
-	{
-		// reflected ray goes to random direction
-		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-		scattered = ray(rec.p, target - rec.p, r_in.time());
-		attenuation = albedo;
-		return true;
-	}
-
-	vec3 albedo;
 };
 
 class lambertian : public material
@@ -95,8 +81,35 @@ public:
 		// reflected ray goes to random direction
 		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
 		scattered = ray(rec.p, target - rec.p, r_in.time());
-		attenuation = albedo->value(rec.u, rec.v, rec.p); //
+		attenuation = albedo->value(rec.u, rec.v, rec.p);
 		return true;
+	}
+
+	virtual bool scatter_pdf(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& pdf) const override
+	{
+#if 0 // same pdf as scattering pdf
+		bool result = scatter(r_in, rec, attenuation, scattered);
+#if 0 // why this differs from scattering_pdf in chapter 5?		
+		pdf = dot(rec.normal, scattered.direction()) / M_PI;
+#else
+		float cosine = dot(rec.normal, normalize(scattered.direction()));
+		pdf = cosine < 0 ? 0 : cosine / M_PI;
+#endif
+		return result;
+#else
+		// reflected ray goes to random direction
+		vec3 direction = random_in_hemisphere(rec.normal);
+		scattered = ray(rec.p, direction, r_in.time());
+		attenuation = albedo->value(rec.u, rec.v, rec.p);
+		pdf = 0.5 / M_PI; // by solving integrate(pdf) over hemisphere = 1
+		return true;
+#endif
+	}
+
+	virtual double scattering_pdf(const ray& r_in, const hit_record& rec, ray& scattered) const
+	{
+		float cosine = dot(rec.normal, normalize(scattered.direction()));
+		return cosine < 0 ? 0 : cosine / M_PI;
 	}
 
 	std::shared_ptr<texture> albedo;

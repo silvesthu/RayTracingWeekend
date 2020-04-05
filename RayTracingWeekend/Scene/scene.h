@@ -73,9 +73,9 @@ public:
 	dielectric_scene(float aspect) : scene()
 	{
 		Add(std::make_shared<sphere>(vec3(0, 0, -1), 0.5f,
-			std::make_shared<lambertian_color>(vec3(0.1f, 0.2f, 0.5f))));
+			std::make_shared<lambertian>(std::make_shared<constant_texture>(vec3(0.1f, 0.2f, 0.5f)))));
 		Add(std::make_shared<sphere>(vec3(0, -100.5f, -1), 100.0f,
-			std::make_shared<lambertian_color>(vec3(0.8f, 0.8f, 0.0f))));
+			std::make_shared<lambertian>(std::make_shared<constant_texture>(vec3(0.8f, 0.8f, 0.0f)))));
 		Add(std::make_shared<sphere>(vec3(1, 0, -1), 0.5f,
 			std::make_shared<metal>(vec3(0.8f, 0.6f, 0.2f), 0.0f)));
 		Add(std::make_shared<sphere>(vec3(-1, 0, -1), 0.5f,

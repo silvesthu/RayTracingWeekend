@@ -48,13 +48,18 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 		ray scattered;
 		vec3 attenuation;
 		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+		double pdf;
+		vec3 albedo;
 
 		switch (s->GetRenderType())
 		{
 		case RenderType::Shaded:
-			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter_pdf(r, rec, attenuation, scattered, pdf))
 			{
-				return emitted + attenuation * color(scattered, s, recursion_depth + 1);
+				if (pdf == 0.0)
+					return emitted;
+
+				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (float)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf);
 			}
 			else
 			{
