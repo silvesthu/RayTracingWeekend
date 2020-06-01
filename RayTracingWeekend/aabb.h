@@ -14,18 +14,18 @@ public:
 	vec3 min() const { return _min; }
 	vec3 max() const { return _max; }
 
-	bool hit(const ray& r, float tmin, float tmax) const
+	bool hit(const ray& r, double tmin, double tmax) const
 	{
 		// "slab" method
 		for (int axis = 0; axis < 3; axis++)
 		{
-			float invD = 1.0f / r.direction()[axis];
+			double invD = 1.0 / r.direction()[axis];
 
 			// calculate t to let ray reach two side of aabb
-			float t0 = (min()[axis] - r.origin()[axis]) * invD;
-			float t1 = (max()[axis] - r.origin()[axis]) * invD;
+			double t0 = (min()[axis] - r.origin()[axis]) * invD;
+			double t1 = (max()[axis] - r.origin()[axis]) * invD;
 
-			if (invD < 0.0f)
+			if (invD < 0.0)
 			{
 				// flip when ray is towards minus
 				std::swap(t0, t1);

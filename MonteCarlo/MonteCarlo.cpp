@@ -12,26 +12,26 @@ void MonteCarlo_Estimate_PI()
 	// See https://www.openfoam.com/documentation/guides/latest/api/Rand48_8H_source.html
 	// for implementation of drand48 with std::linear_congruential_engine (underlying type of std::minstd_rand)
 
-	std::uniform_real_distribution<float> uniform;
+	std::uniform_real_distribution<double> uniform;
 	std::minstd_rand engine;
 
 	int N = 1000;
 	int inside_circle = 0;
 	for (int i = 0; i < N; i++)
 	{
-		float x = 2 * uniform(engine) - 1;
-		float y = 2 * uniform(engine) - 1;
+		double x = 2 * uniform(engine) - 1;
+		double y = 2 * uniform(engine) - 1;
 		
 		if (x * x + y * y < 1)
 			inside_circle++;
 	}
 
-	std::cout << "Estimate of PI = " << 4 * float(inside_circle) / N << "\n";
+	std::cout << "Estimate of PI = " << 4 * inside_circle / N << "\n";
 }
 
 void MonteCarlo_EstimatePI_Forever()
 {
-	std::uniform_real_distribution<float> uniform;
+	std::uniform_real_distribution<double> uniform;
 	std::minstd_rand engine;
 
 	int runs = 0;
@@ -40,20 +40,20 @@ void MonteCarlo_EstimatePI_Forever()
 	{
 		runs++;
 		
-		float x = 2 * uniform(engine) - 1;
-		float y = 2 * uniform(engine) - 1;
+		double x = 2 * uniform(engine) - 1;
+		double y = 2 * uniform(engine) - 1;
 
 		if (x * x + y * y < 1)
 			inside_circle++;
 		
 		if (runs % 100000 == 0)
-			std::cout << "Estimate of PI = " << 4 * float(inside_circle) / runs << "\n";
+			std::cout << "Estimate of PI = " << 4 * inside_circle / runs << "\n";
 	}
 }
 
 void MonteCarlo_EstimatePI_Stratified()
 {
-	std::uniform_real_distribution<float> uniform;
+	std::uniform_real_distribution<double> uniform;
 	std::minstd_rand engine;
 
 	int inside_circle = 0;
@@ -64,8 +64,8 @@ void MonteCarlo_EstimatePI_Stratified()
 		for (int j = 0; j < sqrt_N; j++)
 		{
 			// Random
-			float x = 2 * uniform(engine) - 1;
-			float y = 2 * uniform(engine) - 1;
+			double x = 2 * uniform(engine) - 1;
+			double y = 2 * uniform(engine) - 1;
 
 			if (x * x + y * y < 1)
 				inside_circle++;
@@ -87,7 +87,7 @@ void MonteCarlo_EstimatePI_Stratified()
 
 void MonteCarloIntegration_Uniform()
 {
-	std::uniform_real_distribution<float> uniform;
+	std::uniform_real_distribution<double> uniform;
 	std::minstd_rand engine;
 
 	// integrate(x**2, (x, 0, 2))
@@ -95,10 +95,10 @@ void MonteCarloIntegration_Uniform()
 
 	int inside_circle = 0;
 	int N = 1000000;
-	float sum = 0.0f;
+	double sum = 0.0;
 	for (int i = 0; i < N; i++)
 	{
-		float x = 2 * uniform(engine);
+		double x = 2 * uniform(engine);
 		sum += x * x;
 	}
 	std::cout << "I = " << 2 * sum / N << "\n";
@@ -108,19 +108,19 @@ void MonteCarloIntegration_Uniform()
 
 void MonteCarloIntegration_PDF1()
 {
-	std::uniform_real_distribution<float> uniform;
+	std::uniform_real_distribution<double> uniform;
 	std::minstd_rand engine;
 
-	auto pdf = [](float x) { return 0.5f * x; };
+	auto pdf = [](double x) { return 0.5 * x; };
 
 	int N = 1000000;
-	float sum = 0.0f;
+	double sum = 0.0;
 	for (int i = 0; i < N; i++)
 	{
 		// pdf: 0.5*x
 		// cdf: y = 0.25*x^2 by integrate(0.5*x)
 		// inverse cdf: x = sqrt(4*y) = 2*sqrt(y) by solve(Eq(y, integrate(0.5*x)), x)
-		float x = sqrt(4 * uniform(engine));
+		double x = sqrt(4 * uniform(engine));
 		sum += x * x / pdf(x);
 	}
 
@@ -129,19 +129,19 @@ void MonteCarloIntegration_PDF1()
 
 void MonteCarloIntegration_PDF2()
 {
-	std::uniform_real_distribution<float> uniform;
+	std::uniform_real_distribution<double> uniform;
 	std::minstd_rand engine;
 
-	auto pdf = [](float x) { return 3.0f * x * x / 8.0f; };
+	auto pdf = [](double x) { return 3.0 * x * x / 8.0; };
 
 	int N = 1000000;
-	float sum = 0.0f;
+	double sum = 0.0;
 	for (int i = 0; i < N; i++)
 	{
 		// pdf: 3*x*x/8
 		// cdf: y = x^3/8 by integrate(3*x*x/8)
 		// inverse cdf: x = 2*y^(1/3)  by solve(Eq(y, integrate(3*x*x/8)), x)
-		float x = pow(8.0f * uniform(engine), 1.0f / 3.0f);
+		double x = pow(8.0 * uniform(engine), 1.0 / 3.0);
 		sum += x * x / pdf(x);
 	}
 
@@ -152,25 +152,25 @@ void MonteCarloIntegration_Sphere()
 {
 	auto random_on_unit_sphere = []()
 	{
-		static std::uniform_real_distribution<float> uniform;
+		static std::uniform_real_distribution<double> uniform;
 		static std::minstd_rand engine;
 
 		vec3 p = { 0, 0, 0 };
 		do {
 			vec3 random_vector(uniform(engine), uniform(engine), uniform(engine));
-			p = 2.0f * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
-		} while (dot(p, p) >= 1.0f); // unit sphere
+			p = 2.0 * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
+		} while (dot(p, p) >= 1.0); // unit sphere
 		return normalize(p);
 	};
 
-	auto pdf = [](const vec3& p) { return 1.0f / (4.0f * (float)M_PI); };
+	auto pdf = [](const vec3& p) { return 1.0 / (4.0 * M_PI); };
 
 	int N = 1000000;
-	float sum = 0.0f;
+	double sum = 0.0;
 	for (int i = 0; i < N; i++)
 	{
 		vec3 d = random_on_unit_sphere();
-		float cosine_suqared = d.z * d.z;
+		double cosine_suqared = d.z * d.z;
 		sum += cosine_suqared / pdf(d);
 	}
 
@@ -209,7 +209,7 @@ void Generate_Random_Directions()
 	//     theta = (1 - cos(theta)) / 2
 
 	{
-		static std::uniform_real_distribution<float> uniform;
+		static std::uniform_real_distribution<double> uniform;
 		static std::minstd_rand engine;
 
 		for (int i = 0; i < 200; i++)
@@ -232,11 +232,11 @@ void Generate_Random_Directions()
 	std::cout << '\n';
 
 	{
-		static std::uniform_real_distribution<float> uniform;
+		static std::uniform_real_distribution<double> uniform;
 		static std::minstd_rand engine;
 
 		int N = 1000000;
-		auto sum = 0.0f;
+		auto sum = 0.0;
 		for (int i = 0; i < N; i++)
 		{
 			// uniform distribution
@@ -250,7 +250,7 @@ void Generate_Random_Directions()
 
 			// cosine cubed
 			// p(direction) = 1/2pi
-			sum += z * z * z / (1.0f / (2.0f * (float)M_PI));
+			sum += z * z * z / (1.0 / (2.0 * (float)M_PI));
 		}
 		std::cout << std::fixed << std::setprecision(12);
 		std::cout << "Pi/2     = " << (float)M_PI / 2 << '\n'; // Known solution by direct integration
@@ -262,10 +262,10 @@ void Generate_Random_Directions()
 	{
 		int N = 1000000;
 
-		auto sum = 0.0f;
+		auto sum = 0.0;
 		for (int i = 0; i < N; i++)
 		{
-			static std::uniform_real_distribution<float> uniform;
+			static std::uniform_real_distribution<double> uniform;
 			static std::minstd_rand engine;
 
 			// uniform distribution
@@ -307,7 +307,21 @@ int main()
 
 	// MonteCarloIntegration_Sphere();
 
-	Generate_Random_Directions();
+	// Generate_Random_Directions();
+
+	// for Plot
+	{
+		std::cout << "[";
+		for (int i = 0; i < 1000; i++)
+		{
+			if (i != 0)
+				std::cout << ", ";
+
+			vec3 v = normalize(random_in_unit_sphere());
+			std::cout << "[" << v.x << ", " << v.y << ", " << v.z << "]";
+		}
+		std::cout << "]";
+	}
 
 	return 0;
 }

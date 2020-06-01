@@ -8,11 +8,11 @@ public:
 	hitable_list() {}
 	hitable_list(const std::vector<std::shared_ptr<hitable>>& l) : list(l) {}
 
-	bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const override
+	bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override
 	{
 		hit_record temp_rec;
 		bool hit_anything = false;
-		float closet_so_far = t_max;
+		double closet_so_far = t_max;
 		for (size_t i = 0; i < list.size(); i++)
 		{
 			if (list[i]->hit(r, t_min, closet_so_far, temp_rec))
@@ -36,7 +36,7 @@ public:
 		return hit_anything;
 	}
 
-	bool bounding_box(float t0, float t1, aabb& box) const override
+	bool bounding_box(double t0, double t1, aabb& box) const override
 	{
 		return true;
 	}
@@ -80,13 +80,13 @@ public:
 		list_ptr = hitable_list(list);
 	}
 
-	bool hit(const ray& r, float t0, float t1, hit_record& rec) const override
+	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
 		// test hit with each plane
 		return list_ptr.hit(r, t0, t1, rec);
 	}
 
-	bool bounding_box(float t0, float t1, aabb& box) const override
+	bool bounding_box(double t0, double t1, aabb& box) const override
 	{
 		box = aabb(pmin, pmax);
 		return true;

@@ -20,23 +20,23 @@ namespace CppTest
 		TEST_METHOD(_dot)
 		{
 			auto d = dot(vec3(1, 1, 0), vec3(1, 1, 0));
-			Assert::AreEqual(d, 2.0f);
+			Assert::AreEqual(d, 2.0);
 		}
 
 		TEST_METHOD(_cross)
 		{
 			auto c = cross(vec3(1, 0, 0), vec3(0, 1, 0));
-			Assert::AreEqual(c.x, 0.0f);
-			Assert::AreEqual(c.y, 0.0f);
-			Assert::AreEqual(c.z, 1.0f);
+			Assert::AreEqual(c.x, 0.0);
+			Assert::AreEqual(c.y, 0.0);
+			Assert::AreEqual(c.z, 1.0);
 		}
 
 		TEST_METHOD(_ctor)
 		{
-			auto r = ray(vec3(1, 1, 1), vec3(2, 2, 2), 0.0f);
-			Assert::AreEqual(r.point_at_parameter(3).x, 7.0f);
-			Assert::AreEqual(r.point_at_parameter(3).y, 7.0f);
-			Assert::AreEqual(r.point_at_parameter(3).z, 7.0f);
+			auto r = ray(vec3(1, 1, 1), vec3(2, 2, 2), 0.0);
+			Assert::AreEqual(r.point_at_parameter(3).x, 7.0);
+			Assert::AreEqual(r.point_at_parameter(3).y, 7.0);
+			Assert::AreEqual(r.point_at_parameter(3).z, 7.0);
 		}
 	};
 
@@ -60,9 +60,9 @@ namespace CppTest
 	public:
 		TEST_METHOD(_uniform)
 		{
-			std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
-			Assert::AreEqual(distribution.min(), 0.0f);
-			Assert::AreEqual(distribution.max(), 1.0f);
+			std::uniform_real_distribution<double> distribution(0.0, 1.0);
+			Assert::AreEqual(distribution.min(), 0.0);
+			Assert::AreEqual(distribution.max(), 1.0);
 		}
 	};
 
@@ -73,23 +73,23 @@ namespace CppTest
 		{
 			Assert::IsTrue(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0,0,0), vec3(1,1,1), 0.0f), 0, FLT_MAX));
+					ray(vec3(0,0,0), vec3(1,1,1), 0.0), 0, FLT_MAX));
 
 			Assert::IsFalse(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0, 0, 0), -vec3(1, 1, 1), 0.0f), 0, FLT_MAX));
+					ray(vec3(0, 0, 0), -vec3(1, 1, 1), 0.0), 0, FLT_MAX));
 
 			Assert::IsTrue(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(3, 3, 3), vec3(0, 1, 0), 0.0f), 0, FLT_MAX));
+					ray(vec3(3, 3, 3), vec3(0, 1, 0), 0.0), 0, FLT_MAX));
 
 			Assert::IsTrue(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0, 3, 0), vec3(1, 0, 1), 0.0f), 0, FLT_MAX));
+					ray(vec3(0, 3, 0), vec3(1, 0, 1), 0.0), 0, FLT_MAX));
 
 			Assert::IsFalse(
 				aabb(vec3(2, 2, 2), vec3(4, 4, 4)).hit(
-					ray(vec3(0, 5, 0), vec3(1, 0, 1), 0.0f), 0, FLT_MAX));
+					ray(vec3(0, 5, 0), vec3(1, 0, 1), 0.0), 0, FLT_MAX));
 		}
 
 		TEST_METHOD(_surrounding)
@@ -99,13 +99,13 @@ namespace CppTest
 
 			auto s = aabb::surrounding(box0, box1);
 
-			Assert::AreEqual(s.min()[0], 0.0f);
-			Assert::AreEqual(s.min()[1], 0.0f);
-			Assert::AreEqual(s.min()[2], 0.0f);
+			Assert::AreEqual(s.min()[0], 0.0);
+			Assert::AreEqual(s.min()[1], 0.0);
+			Assert::AreEqual(s.min()[2], 0.0);
 
-			Assert::AreEqual(s.max()[0], 4.0f);
-			Assert::AreEqual(s.max()[1], 4.0f);
-			Assert::AreEqual(s.max()[2], 4.0f);
+			Assert::AreEqual(s.max()[0], 4.0);
+			Assert::AreEqual(s.max()[1], 4.0);
+			Assert::AreEqual(s.max()[2], 4.0);
 		}
 	};
 }

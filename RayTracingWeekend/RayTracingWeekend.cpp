@@ -18,6 +18,7 @@ using namespace concurrency;
 #define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 #include "vec3.h"
+#include "onb.h"
 #include "ray.h"
 #include "sphere.h"
 #include "hitable_list.h"
@@ -43,23 +44,23 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 {
 	hit_record rec;
 	// z_min = 0 will cause hit same point while reflection
-	if (s->GetWorld().hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
+	if (s->GetWorld().hit(r, 0.001f, std::numeric_limits<double>::max(), rec))
 	{
 		ray scattered;
 		vec3 attenuation;
 		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-		double pdf;
+		double pdf = 1.0; // in case material does not set it properly
 		vec3 albedo;
 
 		switch (s->GetRenderType())
 		{
 		case RenderType::Shaded:
-			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter_with_pdf(r, rec, attenuation, scattered, pdf))
+			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered, pdf))
 			{
 				if (pdf <= 0.0)
 					return emitted;
 
-				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (float)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf);
+				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (double)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf);
 			}
 			else
 			{
@@ -79,8 +80,8 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 			{
 				// Gradient background along y-axis
 				vec3 unit_direction = normalize(r.direction());
-				float t = 0.5f * (unit_direction.y + 1.0f);
-				return lerp(vec3(0.5f, 0.7f, 1.0f), vec3(1.0f, 1.0f, 1.0f), t);
+				double t = 0.5f * (unit_direction.y + 1.0);
+				return lerp(vec3(0.5f, 0.7f, 1.0), vec3(1.0, 1.0, 1.0), t);
 			}
 			case BackgroundType::Black:
 			default:
@@ -134,10 +135,10 @@ int main(int argc, char* argv[])
 	typedef cornell_box_scene scene_type;
 	//typedef light_sample scene_type;
 
-	scene_type scene(nx * 1.0f / ny);
+	scene_type scene(nx * 1.0 / ny);
 	auto& cam = scene.GetCamera();
 
-	std::uniform_real_distribution<float> uniform;
+	std::uniform_real_distribution<double> uniform;
 	std::minstd_rand engine;
 
 	std::vector<vec3> canvas(nx * ny);
@@ -157,8 +158,8 @@ int main(int argc, char* argv[])
 					j = ny / 2;
 #endif
 
-					float u = float(i + uniform(engine)) / float(nx);
-					float v = float(j + uniform(engine)) / float(ny);
+					double u = double(i + uniform(engine)) / double(nx);
+					double v = double(j + uniform(engine)) / double(ny);
 
 					// trace
 					ray r = cam.get_ray(u, v);
@@ -171,10 +172,10 @@ int main(int argc, char* argv[])
 					sum += c;
 				}
 
-				auto col = sum / static_cast<float>(subPixelCount);
+				auto col = sum / static_cast<double>(subPixelCount);
 
 				// to gamma 2, and clamp
-				col = vec3(std::min(sqrt(col.x), 1.0f), std::min(sqrt(col.y), 1.0f), std::min(sqrt(col.z), 1.0f));
+				col = vec3(std::min(sqrt(col.x), 1.0), std::min(sqrt(col.y), 1.0), std::min(sqrt(col.z), 1.0));
 
 				// save to canvas
 				canvas[j * nx + i] = col;
@@ -197,7 +198,7 @@ int main(int argc, char* argv[])
 			{
 				vec3 col = canvas[j * nx + i];
 
-				// 255.99f for float inaccuracy
+				// 255.99f for double inaccuracy
 				int ir = int(255.99f * col.r);
 				int ig = int(255.99f * col.g);
 				int ib = int(255.99f * col.b);

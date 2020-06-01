@@ -2,26 +2,27 @@
 
 #include <random>
 #include <memory>
+#include "onb.h"
 #include "hitable.h"
 #include "texture.h"
 
 inline vec3 reflect(const vec3& v, const vec3& n)
 {
-	return v - 2.0f * dot(v, n) * n;
+	return v - 2.0 * dot(v, n) * n;
 }
 
 // a good reference for the math part
 // http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
-inline bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refracted)
+inline bool refract(const vec3& v, const vec3& n, double ni_over_nt, vec3& refracted)
 {
 	vec3 uv = normalize(v);
 	// dt = cos(i)
-	float dt = dot(uv, n);
+	double dt = dot(uv, n);
 	// discriminant = 1 - (ni / nt) ^ 2 * sin(i) ^ 2
 	//              = 1 - (sin(t) / sin(i)) ^ 2 * sin(i) ^2
 	//				= 1 - sin(t) ^ 2
 	//				= cos(t) ^ 2
-	float discriminant = 1.0f - ni_over_nt * ni_over_nt * (1 - dt * dt);
+	double discriminant = 1.0 - ni_over_nt * ni_over_nt * (1 - dt * dt);
 	if (discriminant > 0)
 	{
 		// [Check] refracted = ???
@@ -39,9 +40,9 @@ inline bool refract(const vec3& v, const vec3& n, float ni_over_nt, vec3& refrac
 // the schlick approximation for fresnel factor (specular reflection coefficient)
 // R(theta) = R0 + (1 - R0)(1- cos(theta)) ^ 5
 // R0 = ((n1 - n2) / (n1 + n2)) ^ 2
-inline float schlick(float cosine, float ref_idx)
+inline double schlick(double cosine, double ref_idx)
 {
-	float r0 = (1 - ref_idx) / (1 + ref_idx);
+	double r0 = (1 - ref_idx) / (1 + ref_idx);
 	r0 = r0 * r0;
 	return r0 + (1 - r0) * pow((1 - cosine), 5);
 }
@@ -49,22 +50,15 @@ inline float schlick(float cosine, float ref_idx)
 class material
 {
 public:
-	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const = 0;
-	virtual bool scatter_with_pdf(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& pdf) const
-	{
-		// p(direction): how we samples
-		pdf = 1.0f;
-
-		return scatter(r_in, rec, attenuation, scattered);
-	}
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& sampling_pdf) const = 0;
 
 	virtual double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const
 	{
 		// s(direction): how light scatters
-		return 1.0f;
+		return 1.0;
 	}
 
-	virtual vec3 emitted(float u, float v, const vec3& p) const
+	virtual vec3 emitted(double u, double v, const vec3& p) const
 	{
 		return vec3(0, 0, 0);
 	}
@@ -75,41 +69,42 @@ public:
 class lambertian : public material
 {
 public:
-	static const bool use_random_hemisphere_sampling = true;
-
 	explicit lambertian(std::shared_ptr<texture> a) : albedo(a) {}
-	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& sampling_pdf) const override
 	{
-		// reflected ray goes to random direction, this might not be correct
+		// random_in_unit_sphere - without normalize, ray concentrate on normal direction
+
 		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
 		scattered = ray(rec.p, normalize(target - rec.p), r_in.time());
+		sampling_pdf = scattering_pdf(r_in, rec, scattered);
 
-		if (use_random_hemisphere_sampling)
-		{
-			vec3 direction = random_in_hemisphere(rec.normal);
-			scattered = ray(rec.p, normalize(direction), r_in.time());
-		}
+		// random_unit_vector
+
+// 		vec3 target = rec.p + rec.normal + random_unit_vector();
+// 		scattered = ray(rec.p, normalize(target - rec.p), r_in.time());
+// 		sampling_pdf = scattering_pdf(r_in, rec, scattered);
+
+		// random_in_hemisphere
+
+// 		vec3 direction = random_in_hemisphere(rec.normal);
+// 		scattered = ray(rec.p, normalize(direction), r_in.time());
+// 		sampling_pdf = 1.0f / (2.0f * M_PI);
+
+		// onb
+
+// 		onb uvw;
+// 		uvw.build_from_w(rec.normal);
+// 		vec3 direction = uvw.local(random_cosine_direction());
+// 		scattered = ray(rec.p, normalize(direction), r_in.time());
+// 		sampling_pdf = dot(uvw.w(), scattered.direction()) / M_PI;
 
 		attenuation = albedo->value(rec.u, rec.v, rec.p);
 		return true;
 	}
 
-	virtual bool scatter_with_pdf(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& sampling_pdf) const override
-	{
-		bool result = scatter(r_in, rec, attenuation, scattered);
-
-		// same pdf as scattering pdf
-		sampling_pdf = scattering_pdf(r_in, rec, scattered);
-
-		if (use_random_hemisphere_sampling)
-			sampling_pdf = 1.0f / (2.0f * M_PI);
-
-		return result;
-	}
-
 	virtual double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const
 	{
-		float cosine = dot(rec.normal, scattered.direction());
+		double cosine = dot(rec.normal, scattered.direction());
 		return cosine < 0 ? 0 : cosine / M_PI;
 	}
 
@@ -119,8 +114,8 @@ public:
 class metal : public material
 {
 public:
-	explicit metal(const vec3& a, float f) : albedo(a), fuzz(f) {}
-	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
+	explicit metal(const vec3& a, double f) : albedo(a), fuzz(f) {}
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& sampling_pdf) const override
 	{
 		// reflected ray goes to mirror-reflected direction
 		vec3 reflected = reflect(normalize(r_in.direction()), rec.normal);
@@ -130,20 +125,20 @@ public:
 	}
 
 	vec3 albedo; // metal use albedo ?
-	float fuzz;
+	double fuzz;
 };
 
 class dielectric : public material
 {
 public:
-	explicit dielectric(float ri) : ref_idx(ri) {}
-	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered) const override
+	explicit dielectric(double ri) : ref_idx(ri) {}
+	virtual bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& sampling_pdf) const override
 	{
-		attenuation = vec3(1.0f, 1.0f, 1.0f); // reflect / refract all
+		attenuation = vec3(1.0, 1.0, 1.0); // reflect / refract all
 				
 		vec3 outward_normal;
-		float ni_over_nt;
-		float cosine;
+		double ni_over_nt;
+		double cosine;
 		if (dot(r_in.direction(), rec.normal) > 0)
 		{
 			// inside -> outside
@@ -181,13 +176,13 @@ public:
 			// outside -> inside
 
 			outward_normal = rec.normal;
-			ni_over_nt = 1.0f / ref_idx;
+			ni_over_nt = 1.0 / ref_idx;
 			cosine = -dot(r_in.direction(), rec.normal) / r_in.direction().length();
 		}
 
 		vec3 reflected = reflect(r_in.direction(), rec.normal);
 		vec3 refracted;
-		float reflect_prob; // probability
+		double reflect_prob; // probability
 		if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
 		{
 			// refraction or reflection			
@@ -197,10 +192,10 @@ public:
 		{
 			// total internal reflection
 			scattered = ray(rec.p, reflected, r_in.time());
-			reflect_prob = 1.0f;
+			reflect_prob = 1.0;
 		}
 
-		static std::uniform_real_distribution<float> uniform;
+		static std::uniform_real_distribution<double> uniform;
 		static std::minstd_rand engine;
 		auto rand = uniform(engine);
 		if (rand < reflect_prob)
@@ -215,7 +210,7 @@ public:
 		return true;
 	}
 
-	float ref_idx;
+	double ref_idx;
 };
 
 class diffuse_light : public material
@@ -223,14 +218,13 @@ class diffuse_light : public material
 public:
 	diffuse_light(std::shared_ptr<texture> a) : emit(a) {}
 
-	bool scatter(const ray& r_in, const hit_record& rec, 
-		vec3& attenuation, ray& scattered) const override
+	bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& sampling_pdf) const override
 	{
 		// as light source, no reflection
 		return false;
 	}
 
-	vec3 emitted(float u, float v, const vec3& p) const override
+	vec3 emitted(double u, double v, const vec3& p) const override
 	{
 		return emit->value(u, v, p);
 	}
@@ -246,8 +240,7 @@ class isotropic : public material
 public:
 	isotropic(std::shared_ptr<texture> t) : albedo(t) {}
 
-	bool scatter(const ray& r_in, const hit_record& rec, 
-		vec3& attenuation, ray& scattered) const override
+	bool scatter(const ray& r_in, const hit_record& rec, vec3& attenuation, ray& scattered, double& sampling_pdf) const override
 	{
 		scattered = ray(rec.p, random_in_unit_sphere(), r_in.time());
 		attenuation = albedo->value(rec.u, rec.v, rec.p);

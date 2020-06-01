@@ -58,5 +58,8 @@
     <ClInclude Include="Scene\scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="onb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -20,19 +20,19 @@ struct hit_record
 		t = 0;
 	}
 
-	float t;
+	double t;
 	vec3 p;
 	vec3 normal; // should filled with normalized normal
-	float u;
-	float v;
+	double u;
+	double v;
 	material *mat_ptr;
 };
 
 class hitable
 {
 public:
-	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const = 0;
-	virtual bool bounding_box(float t0, float t1, aabb& box) const = 0;
+	virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const = 0;
+	virtual bool bounding_box(double t0, double t1, aabb& box) const = 0;
 	virtual ~hitable() {}
 };
 
@@ -40,7 +40,7 @@ class bvh_node : public hitable
 {
 public:
 	bvh_node() {}
-	bvh_node(hitable **l, int n, float time0, float time1)
+	bvh_node(hitable **l, int n, double time0, double time1)
 	{
 		auto comparer_gen = [](int i)
 		{
@@ -92,7 +92,7 @@ public:
 		box = aabb::surrounding(box_left, box_right);
 	}
 
-	bool hit(const ray& r, float tmin, float tmax, hit_record& rec) const override
+	bool hit(const ray& r, double tmin, double tmax, hit_record& rec) const override
 	{
 		if (box.hit(r, tmin, tmax))
 		{
@@ -126,7 +126,7 @@ public:
 		}
 	}
 
-	bool bounding_box(float t0, float t1, aabb& b) const override
+	bool bounding_box(double t0, double t1, aabb& b) const override
 	{
 		b = box;
 		return true;
@@ -141,16 +141,16 @@ class xy_rect : public hitable
 {
 public:
 	xy_rect() {}
-	xy_rect(float _x0, float _x1, float _y0, float _y1,
-		float _k, std::shared_ptr<material> mat) :
+	xy_rect(double _x0, double _x1, double _y0, double _y1,
+		double _k, std::shared_ptr<material> mat) :
 			x0(_x0), x1(_x1), y0(_y0), y1(_y1), k(_k), mp(mat) {};
-	bool hit(const ray& r, float t0, float t1, hit_record& rec) const override
+	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
-		float t = (k - r.origin().z) / r.direction().z;
+		double t = (k - r.origin().z) / r.direction().z;
 		if (t < t0 || t > t1)
 			return false;
-		float x = r.origin().x + t * r.direction().x;
-		float y = r.origin().y + t * r.direction().y;
+		double x = r.origin().x + t * r.direction().x;
+		double y = r.origin().y + t * r.direction().y;
 		if (x < x0 || x > x1 || y < y0 || y > y1)
 			return false;
 		rec.u = (x - x0) / (x1 - x0);
@@ -162,13 +162,13 @@ public:
 		return true;
 	}
 
-	bool bounding_box(float t0, float t1, aabb& box) const override
+	bool bounding_box(double t0, double t1, aabb& box) const override
 	{
 		box = aabb(vec3(x0, y0, k - 0.0001f), vec3(x1, y1, k + 0.0001f));
 		return true;
 	}
 
-	float x0, x1, y0, y1, k;
+	double x0, x1, y0, y1, k;
 	std::shared_ptr<material> mp;
 };
 
@@ -176,16 +176,16 @@ class xz_rect : public hitable
 {
 public:
 	xz_rect() {}
-	xz_rect(float _x0, float _x1, float _z0, float _z1,
-		float _k, std::shared_ptr<material> mat) :
+	xz_rect(double _x0, double _x1, double _z0, double _z1,
+		double _k, std::shared_ptr<material> mat) :
 			x0(_x0), x1(_x1), z0(_z0), z1(_z1), k(_k), mp(mat) {};
-	bool hit(const ray& r, float t0, float t1, hit_record& rec) const override
+	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
-		float t = (k - r.origin().y) / r.direction().y;
+		double t = (k - r.origin().y) / r.direction().y;
 		if (t < t0 || t > t1)
 			return false;
-		float x = r.origin().x + t * r.direction().x;
-		float z = r.origin().z + t * r.direction().z;
+		double x = r.origin().x + t * r.direction().x;
+		double z = r.origin().z + t * r.direction().z;
 		if (x < x0 || x > x1 || z < z0 || z > z1)
 			return false;
 		rec.u = (x - x0) / (x1 - x0);
@@ -197,13 +197,13 @@ public:
 		return true;
 	}
 
-	bool bounding_box(float t0, float t1, aabb& box) const override
+	bool bounding_box(double t0, double t1, aabb& box) const override
 	{
 		box = aabb(vec3(x0, k - 0.0001f, z0), vec3(x1, k + 0.0001f, z1));
 		return true;
 	}
 
-	float x0, x1, z0, z1, k;
+	double x0, x1, z0, z1, k;
 	std::shared_ptr<material> mp;
 };
 
@@ -211,16 +211,16 @@ class yz_rect : public hitable
 {
 public:
 	yz_rect() {}
-	yz_rect(float _y0, float _y1, float _z0, float _z1,
-		float _k, std::shared_ptr<material> mat) :
+	yz_rect(double _y0, double _y1, double _z0, double _z1,
+		double _k, std::shared_ptr<material> mat) :
 			y0(_y0), y1(_y1), z0(_z0), z1(_z1), k(_k), mp(mat) {};
-	bool hit(const ray& r, float t0, float t1, hit_record& rec) const override
+	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
-		float t = (k - r.origin().x) / r.direction().x;
+		double t = (k - r.origin().x) / r.direction().x;
 		if (t < t0 || t > t1)
 			return false;
-		float y = r.origin().y + t * r.direction().y;
-		float z = r.origin().z + t * r.direction().z;
+		double y = r.origin().y + t * r.direction().y;
+		double z = r.origin().z + t * r.direction().z;
 		if (y < y0 || y > y1 || z < z0 || z > z1)
 			return false;
 		rec.u = (y - y0) / (y1 - y0);
@@ -232,13 +232,13 @@ public:
 		return true;
 	}
 
-	bool bounding_box(float t0, float t1, aabb& box) const override
+	bool bounding_box(double t0, double t1, aabb& box) const override
 	{
 		box = aabb(vec3(k - 0.0001f, y0, z0), vec3(k + 0.0001f, y1, z1));
 		return true;
 	}
 
-	float y0, y1, z0, z1, k;
+	double y0, y1, z0, z1, k;
 	std::shared_ptr<material> mp;
 };
 
@@ -246,7 +246,7 @@ class flip_normals : public hitable
 {
 public:
 	flip_normals(std::shared_ptr<hitable> p) : ptr(p) {}
-	bool hit(const ray& r, float t0, float t1, hit_record& rec) const override
+	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
 		if (ptr->hit(r, t0, t1, rec))
 		{
@@ -259,7 +259,7 @@ public:
 		}
 	}
 
-	bool bounding_box(float t0, float t1, aabb& box) const override
+	bool bounding_box(double t0, double t1, aabb& box) const override
 	{
 		return ptr->bounding_box(t0, t1, box);
 	}
@@ -272,7 +272,7 @@ class translate : public hitable
 {
 public:
 	translate(std::shared_ptr<hitable> p, const vec3& displacement) : ptr(p), offset(displacement) {}
-	bool hit(const ray& r, float t0, float t1, hit_record& rec) const override
+	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
 		ray move_r(r.origin() - offset, r.direction(), r.time());
 		if (ptr->hit(move_r, t0, t1, rec))
@@ -286,7 +286,7 @@ public:
 		}
 	}
 
-	bool bounding_box(float t0, float t1, aabb& box) const override
+	bool bounding_box(double t0, double t1, aabb& box) const override
 	{
 		if (ptr->bounding_box(t0, t1, box))
 		{
@@ -307,13 +307,13 @@ public:
 class rotate_y : public hitable
 {
 public:
-	rotate_y(std::shared_ptr<hitable> p, float angle) : ptr(p)
+	rotate_y(std::shared_ptr<hitable> p, double angle) : ptr(p)
 	{
 		// calculate new aabb
-		float radians = ((float)M_PI / 180.0f) * angle;
+		double radians = ((double)M_PI / 180.0) * angle;
 		sin_theta = sin(radians);
 		cos_theta = cos(radians);
-		float floatMax = std::numeric_limits<float>::max();
+		double floatMax = std::numeric_limits<double>::max();
 		hasbox = ptr->bounding_box(0, 1, bbox);
 		vec3 min(floatMax, floatMax, floatMax);
 		vec3 max(-floatMax, -floatMax, -floatMax);
@@ -323,12 +323,12 @@ public:
 			{
 				for (int k = 0; k < 2; k++)
 				{
-					float x = i * bbox.max().x + (1 - i) * bbox.min().x;
-					float y = i * bbox.max().y + (1 - i) * bbox.min().y;
-					float z = i * bbox.max().z + (1 - i) * bbox.min().z;
+					double x = i * bbox.max().x + (1 - i) * bbox.min().x;
+					double y = i * bbox.max().y + (1 - i) * bbox.min().y;
+					double z = i * bbox.max().z + (1 - i) * bbox.min().z;
 
-					float newx = cos_theta * x + sin_theta * z;
-					float newz = -sin_theta * x + cos_theta * z;
+					double newx = cos_theta * x + sin_theta * z;
+					double newz = -sin_theta * x + cos_theta * z;
 					vec3 tester(newx, y, newz);
 					for (int c = 0; c < 3; c++)
 					{
@@ -346,7 +346,7 @@ public:
 		}
 		bbox = aabb(min, max);
 	}
-	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const
+	virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const
 	{
 		vec3 origin = r.origin();
 		vec3 direction = r.direction();
@@ -378,15 +378,15 @@ public:
 			return false;
 		}
 	}
-	virtual bool bounding_box(float t0, float t1, aabb& box) const
+	virtual bool bounding_box(double t0, double t1, aabb& box) const
 	{
 		box = bbox;
 		return hasbox;
 	}
 	virtual ~rotate_y() {}
 	std::shared_ptr<hitable> ptr;
-	float sin_theta;
-	float cos_theta;
+	double sin_theta;
+	double cos_theta;
 	bool hasbox;
 	aabb bbox;
 };
@@ -398,14 +398,14 @@ class constant_medium : public hitable
 public:
 	constant_medium(
 		std::shared_ptr<hitable> b,
-		float d,
+		double d,
 		std::shared_ptr<material> mat) : boundary(b), density(d), mp(mat)
 	{
 	}
 
-	virtual bool hit(const ray& r, float t_min, float t_max, hit_record& rec) const
+	virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const
 	{
-		static std::uniform_real_distribution<float> uniform;
+		static std::uniform_real_distribution<double> uniform;
 		static std::minstd_rand engine;
 
 		hit_record rec1, rec2;
@@ -413,15 +413,15 @@ public:
 		// hit the volume
 		if (boundary->hit(
 			r,
-			-std::numeric_limits<float>::max(),
-			std::numeric_limits<float>::max(),
+			-std::numeric_limits<double>::max(),
+			std::numeric_limits<double>::max(),
 			rec1))
 		{
 			// take a small step
 			if(boundary->hit(
 				r,
 				rec1.t + 0.0001f,
-				std::numeric_limits<float>::max(),
+				std::numeric_limits<double>::max(),
 				rec2))
 			{
 				// out of bound
@@ -436,9 +436,9 @@ public:
 				if (rec1.t < 0)
 					rec1.t = 0;
 
-				float distance_inside_boundary =
+				double distance_inside_boundary =
 					(rec2.t - rec1.t) * r.direction().length();
-				float hit_distance = -(1 / density) * log(uniform(engine));
+				double hit_distance = -(1 / density) * log(uniform(engine));
 
 				if (hit_distance < distance_inside_boundary)
 				{
@@ -454,13 +454,13 @@ public:
 		return false;
 	}
 
-	virtual bool bounding_box(float t0, float t1, aabb& box) const
+	virtual bool bounding_box(double t0, double t1, aabb& box) const
 	{
 		return boundary->bounding_box(t0, t1, box);
 	}
 
 	std::shared_ptr<hitable> boundary;
-	float density;
+	double density;
 	std::shared_ptr<material> mp;
 };
 

@@ -6,12 +6,12 @@
 #include "vec3.h"
 #include "ray.h"
 
-inline float smoothstep_hermite_cubic(float x)
+inline double smoothstep_hermite_cubic(double x)
 {
 	return x * x * (3 - 2 * x);
 }
 
-inline float smootherstep_perlin(float x)
+inline double smootherstep_perlin(double x)
 {
 	return x * x * x * (x * (x * 6 - 15) + 10);
 }
@@ -19,13 +19,13 @@ inline float smootherstep_perlin(float x)
 #define smooth smoothstep_hermite_cubic
 //#define smooth smootherstep_perlin
 
-inline float trilinear_interp(float c[2][2][2], float u, float v, float w)
+inline double trilinear_interp(double c[2][2][2], double u, double v, double w)
 {
-	float uu = smooth(u);
-	float vv = smooth(v);
-	float ww = smooth(w);
+	double uu = smooth(u);
+	double vv = smooth(v);
+	double ww = smooth(w);
 
-	float accum = 0;
+	double accum = 0;
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
 			for (int k = 0; k < 2; k++)
@@ -37,13 +37,13 @@ inline float trilinear_interp(float c[2][2][2], float u, float v, float w)
 	return accum;
 }
 
-inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w)
+inline double perlin_interp(vec3 c[2][2][2], double u, double v, double w)
 {
-	float uu = smooth(u);
-	float vv = smooth(v);
-	float ww = smooth(w);
+	double uu = smooth(u);
+	double vv = smooth(v);
+	double ww = smooth(w);
 
-	float accum = 0;
+	double accum = 0;
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 2; j++)
 			for (int k = 0; k < 2; k++)
@@ -71,11 +71,11 @@ inline float perlin_interp(vec3 c[2][2][2], float u, float v, float w)
 class perlin
 {
 public:
-	float turb(const vec3& p, int depth = 7) const
+	double turb(const vec3& p, int depth = 7) const
 	{
-		float accum = 0;
+		double accum = 0;
 		vec3 temp_p = p;
-		float weight = 1.0f;
+		double weight = 1.0;
 		for (int i = 0; i < depth; i++)
 		{
 			accum += weight * noise(temp_p);
@@ -86,16 +86,16 @@ public:
 	}
 
 	// -1 ~ 1
-	float noise(const vec3& p) const 
+	double noise(const vec3& p) const 
 	{
 		if (!initialized)
 		{
 			initialize();
 		}
 
-		float u = p.x - floor(p.x);
-		float v = p.y - floor(p.y);
-		float w = p.z - floor(p.z);
+		double u = p.x - floor(p.x);
+		double v = p.y - floor(p.y);
+		double w = p.z - floor(p.z);
 
 		enum class InterpolationType
 		{
@@ -114,7 +114,7 @@ public:
 				int j = (int)floor(p.y);
 				int k = (int)floor(p.z);
 
-				float c[2][2][2];
+				double c[2][2][2];
 
 				for (int di = 0; di < 2; di++)
 					for (int dj = 0; dj < 2; dj++)
@@ -165,7 +165,7 @@ private:
 
 	static void permute(int* p, int n)
 	{
-		std::uniform_real_distribution<float> uniform;
+		std::uniform_real_distribution<double> uniform;
 		std::minstd_rand engine;
 
 		for (int i = n - 1; i > 0; i--)
@@ -186,9 +186,9 @@ private:
 		permute(p, n);
 	}
 
-	static void perlin_generate_float(float* p, int n)
+	static void perlin_generate_float(double* p, int n)
 	{
-		std::uniform_real_distribution<float> uniform;
+		std::uniform_real_distribution<double> uniform;
 		std::minstd_rand engine;
 
 		for (int i = 0; i < n; i++)
@@ -199,15 +199,15 @@ private:
 
 	static void perlin_generate_vec3(vec3* p, int n)
 	{
-		std::uniform_real_distribution<float> uniform;
+		std::uniform_real_distribution<double> uniform;
 		std::minstd_rand engine;
 
 		for (int i = 0; i < n; i++)
 		{
 			p[i] = vec3(
-				-1.0f + 2.0f * uniform(engine),
-				-1.0f + 2.0f * uniform(engine),
-				-1.0f + 2.0f * uniform(engine));
+				-1.0 + 2.0 * uniform(engine),
+				-1.0 + 2.0 * uniform(engine),
+				-1.0 + 2.0 * uniform(engine));
 			p[i] = normalize(p[i]);
 		}
 	}
@@ -215,7 +215,7 @@ private:
 	static const int SIZE = 256;
 	
 	// as lookup table
-	static float ranfloat[SIZE];	
+	static double ranfloat[SIZE];	
 	static vec3 ranvec[SIZE];
 	
 	static int perm_x[SIZE];
