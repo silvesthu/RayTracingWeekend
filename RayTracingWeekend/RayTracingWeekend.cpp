@@ -1,19 +1,19 @@
 #define NOMINMAX
-
-#include <crtdbg.h>
-#include <ppl.h>
-using namespace concurrency;
-
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <iostream>
+#include <iomanip>
+#include <limits>
 #include <fstream>
 #include <chrono>
 #include <random>
 #include <algorithm>
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 #define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
+#include <cstdlib>
+
+#include <crtdbg.h>
+#include <ppl.h>
+using namespace concurrency;
 
 #define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
@@ -27,7 +27,7 @@ using namespace concurrency;
 #include "Scene/scene.h"
 
 const int size_multipler = 4;
-const int subPixelCount = 160;
+const int subPixelCount = 32;
 
 const int nx = 100 * size_multipler;
 const int ny = 100 * size_multipler;
@@ -54,9 +54,9 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 		switch (s->GetRenderType())
 		{
 		case RenderType::Shaded:
-			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter_pdf(r, rec, attenuation, scattered, pdf))
+			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter_with_pdf(r, rec, attenuation, scattered, pdf))
 			{
-				if (pdf == 0.0)
+				if (pdf <= 0.0)
 					return emitted;
 
 				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (float)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf);
@@ -121,8 +121,8 @@ void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Funct
 	// Parallel gives different result every time as RNG should not used across threads
 	// Switch to Serial to get stable result
 
-	Concurrency::parallel_for(_First, _Last, _Step, _Func);
-	//serial_for(_First, _Last, _Step, _Func);
+	//Concurrency::parallel_for(_First, _Last, _Step, _Func);
+	serial_for(_First, _Last, _Step, _Func);
 }
 
 int main(int argc, char* argv[])

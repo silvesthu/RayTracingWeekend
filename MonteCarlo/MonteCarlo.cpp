@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <cmath>
+#include <iomanip>
 
 #include "../RayTracingWeekend/vec3.h"
 #include "../RayTracingWeekend/material.h"
@@ -181,6 +182,111 @@ void MonteCarloIntegration_Sphere()
 	// https://www.khanacademy.org/math/multivariable-calculus/integrating-multivariable-functions/triple-integrals-a/a/triple-integrals-in-spherical-coordinates
 }
 
+void Generate_Random_Directions()
+{
+	// book3.chapter7
+
+	// to generate random directions
+
+	// assume 
+	//   z-axis = surface normal
+	//   theta = angle from the normal
+
+	// p(direction) = f(theta)
+
+	// integration over spherical coordinates
+	//   dA = sin(theta) * dtheta * dphi
+
+	// PDF
+	//   p(phi) = 1/2pi <= the circle
+	//   p(theta) = 2pi * f(theta) * sin(theta) <= p(direction)dA
+
+	// Distributions r_1, r_2 - see book3.chapter3 about inverse CDF
+	//   r_1 = integrate(1/2pi, dt, 0, phi) = phi/2pi
+	//     phi = 2pi * r_1
+	//   r_2 = integrate(2pi * f(t) *sin(t), dt, 0, theta)
+	//     for uniform density on sphere, p(direction) = f(theta) = 1/4pi
+	//     theta = (1 - cos(theta)) / 2
+
+	{
+		static std::uniform_real_distribution<float> uniform;
+		static std::minstd_rand engine;
+
+		for (int i = 0; i < 200; i++)
+		{
+			// uniform distribution
+			auto r1 = uniform(engine);
+			auto r2 = uniform(engine);
+
+			// x,y,z in distribution of theta, phi in sphere
+			auto x = cos(2 * M_PI * r1) * 2 * sqrt(r2 * (1 - r2));
+			auto y = sin(2 * M_PI * r1) * 2 * sqrt(r2 * (1 - r2));
+			auto z = 1 - 2 * r2;
+
+			// p(direction) = 1/4pi
+
+			std::cout << x << " " << y << " " << z << '\n';
+		}
+	}
+
+	std::cout << '\n';
+
+	{
+		static std::uniform_real_distribution<float> uniform;
+		static std::minstd_rand engine;
+
+		int N = 1000000;
+		auto sum = 0.0f;
+		for (int i = 0; i < N; i++)
+		{
+			// uniform distribution
+			auto r1 = uniform(engine);
+			auto r2 = uniform(engine);
+
+			// x,y,z in distribution of theta, phi in hemisphere
+			auto x = cos(2 * (float)M_PI * r1) * 2 * sqrt(r2 * (1 - r2));
+			auto y = sin(2 * (float)M_PI * r1) * 2 * sqrt(r2 * (1 - r2));
+			auto z = 1 - r2;
+
+			// cosine cubed
+			// p(direction) = 1/2pi
+			sum += z * z * z / (1.0f / (2.0f * (float)M_PI));
+		}
+		std::cout << std::fixed << std::setprecision(12);
+		std::cout << "Pi/2     = " << (float)M_PI / 2 << '\n'; // Known solution by direct integration
+		std::cout << "Estimate = " << sum / N << '\n';
+	}
+
+	std::cout << '\n';
+
+	{
+		int N = 1000000;
+
+		auto sum = 0.0f;
+		for (int i = 0; i < N; i++)
+		{
+			static std::uniform_real_distribution<float> uniform;
+			static std::minstd_rand engine;
+
+			// uniform distribution
+			auto r1 = uniform(engine);
+			auto r2 = uniform(engine);
+
+			// x,y,z in distribution of theta, phi in cosine distribution
+			auto x = cos(2 * (float)M_PI * r1) * sqrt(r2);
+			auto y = sin(2 * (float)M_PI * r1) * sqrt(r2);
+			auto z = sqrt(1 - r2);
+
+			// p(direction) = cos(theta)/pi
+			sum += z * z * z / (z / (float)M_PI);
+		}
+
+		std::cout << std::fixed << std::setprecision(12);
+		std::cout << "Pi/2     = " << (float)M_PI / 2 << '\n';
+		std::cout << "Estimate = " << sum / N << '\n';
+	}
+}
+
 int main()
 {
 	// MonteCarlo_Estimate_PI();
@@ -200,6 +306,8 @@ int main()
 	// MonteCarloIntegration_PDF2();
 
 	// MonteCarloIntegration_Sphere();
+
+	Generate_Random_Directions();
 
 	return 0;
 }
