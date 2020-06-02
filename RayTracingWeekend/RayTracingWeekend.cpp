@@ -74,10 +74,10 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 				auto light_cosine = fabs(to_light.y);
 				if (light_cosine < 0.000001)
 					return emitted;
-#endif // book3.chapter9
 
 				pdf = distance_squared / (light_cosine * light_area);
 				scattered = ray(rec.p, to_light, r.time());
+#endif // book3.chapter9
 
 				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (double)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf);
 			}
