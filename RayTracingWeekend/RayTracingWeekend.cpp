@@ -24,6 +24,7 @@ using namespace concurrency;
 #include "hitable_list.h"
 #include "camera.h"
 #include "material.h"
+#include "utility.h"
 
 #include "Scene/scene.h"
 
@@ -59,6 +60,24 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 			{
 				if (pdf <= 0.0)
 					return emitted;
+
+#if 1 // book3.chapter9
+				auto on_light = vec3(random_double(213, 343), 554, random_double(227, 332));
+				auto to_light = on_light - rec.p;
+				auto distance_squared = to_light.length_squared();
+				to_light.make_unit_vector();
+
+				if (dot(to_light, rec.normal) < 0)
+					return emitted;
+
+				double light_area = (343 - 213) * (332 - 227);
+				auto light_cosine = fabs(to_light.y);
+				if (light_cosine < 0.000001)
+					return emitted;
+#endif // book3.chapter9
+
+				pdf = distance_squared / (light_cosine * light_area);
+				scattered = ray(rec.p, to_light, r.time());
 
 				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (double)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf);
 			}

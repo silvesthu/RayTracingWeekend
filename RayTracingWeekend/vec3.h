@@ -28,8 +28,9 @@ public:
 	inline vec3& operator*=(const double t) { x *= t; y *= t; z *= t; return *this; }
 	inline vec3& operator/=(const double t) { x /= t; y /= t; z /= t; return *this; }
 
-	inline double squared_length() const { return x * x + y * y + z * z; }
-	inline double length() const { return std::sqrt(squared_length()); }
+	inline double length_squared() const { return x * x + y * y + z * z; }
+	inline double length() const { return std::sqrt(length_squared()); }
+	inline void make_unit_vector();
 
 	union
 	{
@@ -132,4 +133,9 @@ inline vec3 random_cosine_direction()
 	auto y = sin(phi) * sqrt(r2);
 
 	return vec3(x, y, z);
+}
+
+inline void vec3::make_unit_vector()
+{
+	*this = normalize(*this);
 }

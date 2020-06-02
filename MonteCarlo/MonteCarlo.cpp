@@ -317,7 +317,14 @@ int main()
 			if (i != 0)
 				std::cout << ", ";
 
-			vec3 v = normalize(random_in_unit_sphere());
+			vec3 v;
+
+			onb uvw;
+			uvw.build_from_w(vec3(0, 0, 1));
+			v = uvw.local(random_cosine_direction());
+
+			// v = normalize(random_in_hemisphere(vec3(0,0,1)));
+
 			std::cout << "[" << v.x << ", " << v.y << ", " << v.z << "]";
 		}
 		std::cout << "]";
