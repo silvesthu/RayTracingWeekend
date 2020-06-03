@@ -20,8 +20,9 @@ using namespace concurrency;
 #include "vec3.h"
 #include "onb.h"
 #include "ray.h"
+#include "pdf.h"
 #include "sphere.h"
-#include "hitable_list.h"
+#include "hittable_list.h"
 #include "camera.h"
 #include "material.h"
 #include "utility.h"
@@ -50,18 +51,18 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 		ray scattered;
 		vec3 attenuation;
 		vec3 emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
-		double pdf = 1.0; // in case material does not set it properly
+		double pdf_val = 1.0; // in case material does not set it properly
 		vec3 albedo;
 
 		switch (s->GetRenderType())
 		{
 		case RenderType::Shaded:
-			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered, pdf))
+			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered, pdf_val))
 			{
-				if (pdf <= 0.0)
+				if (pdf_val <= 0.0)
 					return emitted;
 
-#if 1 // book3.chapter9
+#if 0 // book3.chapter9 - hard-coded light pdf
 				auto on_light = vec3(random_double(213, 343), 554, random_double(227, 332));
 				auto to_light = on_light - rec.p;
 				auto distance_squared = to_light.length_squared();
@@ -75,11 +76,23 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 				if (light_cosine < 0.000001)
 					return emitted;
 
-				pdf = distance_squared / (light_cosine * light_area);
+				pdf_val = distance_squared / (light_cosine * light_area);
 				scattered = ray(rec.p, to_light, r.time());
 #endif // book3.chapter9
+#if 0 // book3.chapter10 - hard-coded light pdf using pdf class
+				std::shared_ptr<hittable> light_shape = std::make_shared<xz_rect>(213, 343, 227, 332, 554, nullptr);
+				hittable_pdf p(light_shape, rec.p);
+				scattered = ray(rec.p, p.generate(), r.time());
+				pdf_val = p.value(scattered.direction());
+#endif // book3.chapter10
 
-				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (double)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf);
+#if 0 // book3.chapter10 - hard-coded cosine pdf
+				cosine_pdf p(rec.normal);
+				scattered = ray(rec.p, p.generate(), r.time());
+				pdf_val = p.value(scattered.direction());
+#endif // // book3.chapter10
+
+				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (double)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf_val);
 			}
 			else
 			{

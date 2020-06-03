@@ -9,6 +9,7 @@
 #include "ray.h"
 #include "aabb.h"
 #include "texture.h"
+#include "utility.h"
 
 class material;
 
@@ -19,7 +20,6 @@ struct hit_record
 		mat_ptr = nullptr;
 		t = 0;
 	}
-
 	double t;
 	vec3 p;
 	vec3 normal; // should filled with normalized normal
@@ -28,23 +28,25 @@ struct hit_record
 	material *mat_ptr;
 };
 
-class hitable
+class hittable
 {
 public:
 	virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const = 0;
 	virtual bool bounding_box(double t0, double t1, aabb& box) const = 0;
-	virtual ~hitable() {}
+	virtual double pdf_value(const vec3& o, const vec3& v) const { return 0.0; }
+	virtual vec3 random(const vec3& o) const { return vec3(1, 0, 0); }
+	virtual ~hittable() {}
 };
 
-class bvh_node : public hitable
+class bvh_node : public hittable
 {
 public:
 	bvh_node() {}
-	bvh_node(hitable **l, int n, double time0, double time1)
+	bvh_node(hittable **l, int n, double time0, double time1)
 	{
 		auto comparer_gen = [](int i)
 		{
-			return [=](hitable* lhs, hitable* rhs)
+			return [=](hittable* lhs, hittable* rhs)
 			{
 				aabb box_left, box_right;
 				if (
@@ -132,12 +134,12 @@ public:
 		return true;
 	}
 
-	hitable* left;
-	hitable* right;
+	hittable* left;
+	hittable* right;
 	aabb box;
 };
 
-class xy_rect : public hitable
+class xy_rect : public hittable
 {
 public:
 	xy_rect() {}
@@ -172,7 +174,7 @@ public:
 	std::shared_ptr<material> mp;
 };
 
-class xz_rect : public hitable
+class xz_rect : public hittable
 {
 public:
 	xz_rect() {}
@@ -203,11 +205,33 @@ public:
 		return true;
 	}
 
+	virtual double pdf_value(const vec3& origin, const vec3& v) const override
+	{
+		// same as hard-coded version in book3.chapter9
+
+		hit_record rec;
+		// ensure hit if direction is right by letting 0.001 < FLT_MAX < +inf
+		if (!this->hit(ray(origin, v, FLT_MAX), 0.001, std::numeric_limits<double>::infinity(), rec))
+			return 0;
+
+		auto area = (x1 - x0) * (z1 - z0);
+		auto distance_squared = rec.t * rec.t * v.length_squared();
+		auto cosine = fabs(dot(v, rec.normal) / v.length());
+
+		return distance_squared / (cosine * area);
+	}
+
+	virtual vec3 random(const vec3& origin) const override
+	{
+		auto random = vec3(random_double(x0, x1), k, random_double(z0, z1));
+		return random - origin;
+	}
+
 	double x0, x1, z0, z1, k;
 	std::shared_ptr<material> mp;
 };
 
-class yz_rect : public hitable
+class yz_rect : public hittable
 {
 public:
 	yz_rect() {}
@@ -242,10 +266,10 @@ public:
 	std::shared_ptr<material> mp;
 };
 
-class flip_normals : public hitable
+class flip_normals : public hittable
 {
 public:
-	flip_normals(std::shared_ptr<hitable> p) : ptr(p) {}
+	flip_normals(std::shared_ptr<hittable> p) : ptr(p) {}
 	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
 		if (ptr->hit(r, t0, t1, rec))
@@ -264,14 +288,14 @@ public:
 		return ptr->bounding_box(t0, t1, box);
 	}
 
-	std::shared_ptr<hitable> ptr;
+	std::shared_ptr<hittable> ptr;
 };
 
-// brilliant ! move ray instead of hitable
-class translate : public hitable
+// brilliant ! move ray instead of hittable
+class translate : public hittable
 {
 public:
-	translate(std::shared_ptr<hitable> p, const vec3& displacement) : ptr(p), offset(displacement) {}
+	translate(std::shared_ptr<hittable> p, const vec3& displacement) : ptr(p), offset(displacement) {}
 	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
 	{
 		ray move_r(r.origin() - offset, r.direction(), r.time());
@@ -299,15 +323,15 @@ public:
 		}
 	}
 
-	std::shared_ptr<hitable> ptr;
+	std::shared_ptr<hittable> ptr;
 	vec3 offset;
 };
 
-// rotate hitable
-class rotate_y : public hitable
+// rotate hittable
+class rotate_y : public hittable
 {
 public:
-	rotate_y(std::shared_ptr<hitable> p, double angle) : ptr(p)
+	rotate_y(std::shared_ptr<hittable> p, double angle) : ptr(p)
 	{
 		// calculate new aabb
 		double radians = ((double)M_PI / 180.0) * angle;
@@ -384,7 +408,7 @@ public:
 		return hasbox;
 	}
 	virtual ~rotate_y() {}
-	std::shared_ptr<hitable> ptr;
+	std::shared_ptr<hittable> ptr;
 	double sin_theta;
 	double cos_theta;
 	bool hasbox;
@@ -393,11 +417,11 @@ public:
 
 // probability = C(proportional to optical density) * dL(distance)
 
-class constant_medium : public hitable
+class constant_medium : public hittable
 {
 public:
 	constant_medium(
-		std::shared_ptr<hitable> b,
+		std::shared_ptr<hittable> b,
 		double d,
 		std::shared_ptr<material> mat) : boundary(b), density(d), mp(mat)
 	{
@@ -459,7 +483,7 @@ public:
 		return boundary->bounding_box(t0, t1, box);
 	}
 
-	std::shared_ptr<hitable> boundary;
+	std::shared_ptr<hittable> boundary;
 	double density;
 	std::shared_ptr<material> mp;
 };

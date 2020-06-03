@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../hitable_list.h"
+#include "../hittable_list.h"
 #include "../camera.h"
 
 enum class RenderType
@@ -21,16 +21,16 @@ public:
 	scene() {}
 	virtual ~scene() {}
 
-	void Add(std::shared_ptr<hitable> h) { world.list.push_back(h); }
+	void Add(std::shared_ptr<hittable> h) { world.list.push_back(h); }
 
-	const hitable_list& GetWorld() const { return world; };
+	const hittable_list& GetWorld() const { return world; };
 	RenderType GetRenderType() const { return render_type; }
 	BackgroundType GetBackgroundType() const { return background_type; }
 
 	camera& GetCamera() { return cam; };
 
 protected:
-	hitable_list world;
+	hittable_list world;
 	camera cam;
 
 	RenderType render_type = RenderType::Shaded;
@@ -45,7 +45,7 @@ public:
 		std::shared_ptr<texture> pertext = std::make_shared<noise_texture>(4.0);
 		std::shared_ptr<texture> four = std::make_shared<constant_texture>(vec3(4, 4, 4)); // color with scale
 
-		std::vector<std::shared_ptr<hitable>> list;
+		std::vector<std::shared_ptr<hittable>> list;
 
 		list.push_back(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.0,
 			std::make_shared<lambertian>(pertext)));
@@ -62,7 +62,7 @@ public:
 		auto aperture = 0.2f;
 		auto vfov = 20.0;
 
-		this->world = hitable_list(list);
+		this->world = hittable_list(list);
 		this->cam = camera(lookfrom, lookat, vec3(0.0, 1.0, 0.0), vfov, aspect, aperture, dist_to_focus, 0.0, 1.0);
 	}
 };
@@ -186,7 +186,7 @@ public:
 		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15.0, 15.0, 15.0));
 		auto light = std::make_shared<diffuse_light>(light_tex);
 
-		std::vector<std::shared_ptr<hitable>> list;
+		std::vector<std::shared_ptr<hittable>> list;
 
 		list.push_back(
 			std::make_shared<xz_rect>(213.0, 343.0, 227.0, 332.0, 554.0, light));
@@ -226,7 +226,7 @@ public:
 		auto aperture = 0.0;
 		auto vfov = 40.0;
 
-		this->world = hitable_list(list);
+		this->world = hittable_list(list);
 		this->cam = camera(lookfrom, lookat, vec3(0.0, 1.0, 0.0), vfov, aspect, aperture, dist_to_focus, 0.0, 1.0);
 		this->background_type = BackgroundType::Black;
 	}

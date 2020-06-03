@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hitable.h"
+#include "hittable.h"
 #include "material.h"
 
 struct movement_none
@@ -38,7 +38,7 @@ struct movement_linear
 };
 
 template<typename movement_type>
-class sphere_base : public hitable
+class sphere_base : public hittable
 {
 public:
 	sphere_base() : center(0, 0, 0), radius(0), mat(nullptr) {}

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "hitable.h"
+#include "hittable.h"
 
-class hitable_list : public hitable 
+class hittable_list : public hittable 
 {
 public:
-	hitable_list() {}
-	hitable_list(const std::vector<std::shared_ptr<hitable>>& l) : list(l) {}
+	hittable_list() {}
+	hittable_list(const std::vector<std::shared_ptr<hittable>>& l) : list(l) {}
 
 	bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const override
 	{
@@ -41,11 +41,11 @@ public:
 		return true;
 	}
 
-	std::vector<std::shared_ptr<hitable>> list;
+	std::vector<std::shared_ptr<hittable>> list;
 };
 
 // AABB
-class box : public hitable
+class box : public hittable
 {
 public:
 	box() {}
@@ -55,7 +55,7 @@ public:
 		pmax = p1;
 
 		// AABB composed with 6 planes
-		std::vector<std::shared_ptr<hitable>> list;
+		std::vector<std::shared_ptr<hittable>> list;
 		list.push_back(
 			std::make_shared<xy_rect>(
 				p0.x, p1.x, p0.y, p1.y, p1.z, mat));
@@ -77,7 +77,7 @@ public:
 			std::make_shared<yz_rect>(
 				p0.y, p1.y, p0.z, p1.z, p0.x, mat)));
 
-		list_ptr = hitable_list(list);
+		list_ptr = hittable_list(list);
 	}
 
 	bool hit(const ray& r, double t0, double t1, hit_record& rec) const override
@@ -93,5 +93,5 @@ public:
 	}
 
 	vec3 pmin, pmax;
-	hitable_list list_ptr; // hold 6 planes
+	hittable_list list_ptr; // hold 6 planes
 };

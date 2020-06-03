@@ -3,7 +3,7 @@
 #include <random>
 #include <memory>
 #include "onb.h"
-#include "hitable.h"
+#include "hittable.h"
 #include "texture.h"
 
 inline vec3 reflect(const vec3& v, const vec3& n)
@@ -104,7 +104,7 @@ public:
 
 	virtual double scattering_pdf(const ray& r_in, const hit_record& rec, const ray& scattered) const
 	{
-		double cosine = dot(rec.normal, scattered.direction());
+		double cosine = dot(rec.normal, normalize(scattered.direction()));
 		return cosine < 0 ? 0 : cosine / M_PI;
 	}
 
