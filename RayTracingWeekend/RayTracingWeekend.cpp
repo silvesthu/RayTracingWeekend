@@ -29,7 +29,7 @@ using namespace concurrency;
 #include "Scene/scene.h"
 
 const int size_multipler = 4;
-const int subPixelCount = 32;
+const int subPixelCount = 10;
 
 const int nx = 100 * size_multipler;
 const int ny = 100 * size_multipler;
@@ -49,7 +49,7 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 	{
 		ray scattered;
 		vec3 attenuation;
-		vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+		vec3 emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
 		double pdf = 1.0; // in case material does not set it properly
 		vec3 albedo;
 

@@ -58,7 +58,7 @@ public:
 		return 1.0;
 	}
 
-	virtual vec3 emitted(double u, double v, const vec3& p) const
+	virtual vec3 emitted(const ray& r_in, const hit_record& rec, double u, double v, const vec3& p) const
 	{
 		return vec3(0, 0, 0);
 	}
@@ -224,9 +224,12 @@ public:
 		return false;
 	}
 
-	vec3 emitted(double u, double v, const vec3& p) const override
+	vec3 emitted(const ray& r_in, const hit_record& rec, double u, double v, const vec3& p) const override
 	{
-		return emit->value(u, v, p);
+		if (dot(rec.normal, r_in.direction()) > 0)
+			return emit->value(u, v, p);
+		else
+			return vec3(0, 0, 0);
 	}
 
 	std::shared_ptr<texture> emit;
