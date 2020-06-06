@@ -79,18 +79,31 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 				pdf_val = distance_squared / (light_cosine * light_area);
 				scattered = ray(rec.p, to_light, r.time());
 #endif // book3.chapter9
-#if 0 // book3.chapter10 - hard-coded light pdf using pdf class
+
+#if 0 // book3.chapter10.2 - hard-coded light pdf using pdf class
 				std::shared_ptr<hittable> light_shape = std::make_shared<xz_rect>(213, 343, 227, 332, 554, nullptr);
 				hittable_pdf p(light_shape, rec.p);
 				scattered = ray(rec.p, p.generate(), r.time());
 				pdf_val = p.value(scattered.direction());
-#endif // book3.chapter10
+#endif // book3.chapter10.2
 
-#if 0 // book3.chapter10 - hard-coded cosine pdf
+				// notice only sampling light make roof appear black!
+
+#if 0 // book3.chapter10.1 - hard-coded cosine pdf
 				cosine_pdf p(rec.normal);
 				scattered = ray(rec.p, p.generate(), r.time());
 				pdf_val = p.value(scattered.direction());
-#endif // // book3.chapter10
+#endif // // book3.chapter10.1
+
+#if 0 // book3.chapter10.3 - hard-coded mixture pdf
+				std::shared_ptr<hittable> light_shape = std::make_shared<xz_rect>(213, 343, 227, 332, 554, nullptr);
+				auto p0 = std::make_shared<hittable_pdf>(light_shape, rec.p);
+				auto p1 = std::make_shared<cosine_pdf>(rec.normal);
+				mixture_pdf p(p0, p1);
+
+				scattered = ray(rec.p, p.generate(), r.time());
+				pdf_val = p.value(scattered.direction());
+#endif // book3.chapter10.3
 
 				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (double)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf_val);
 			}

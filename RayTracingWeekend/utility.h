@@ -11,7 +11,7 @@ void get_sphere_uv(const vec3& p, double& u, double& v)
 	v = (theta + M_PI / 2) / M_PI;
 }
 
-double random_double(double a, double b)
+double random_double(double a = 0.0, double b = 1.0)
 {
 	static std::uniform_real_distribution<double> uniform;
 	static std::minstd_rand engine;
