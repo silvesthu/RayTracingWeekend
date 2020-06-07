@@ -62,10 +62,6 @@ vec3 color(const ray& r, const scene *s, int depth)
 			if (!rec.mat_ptr->scatter(r, rec, srec))
 				return emitted;
 
-			// step w/o pdf
-			if (srec.scattered_without_pdf)
-				return srec.attenuation * color(srec.scattered_ray_without_pdf, s, depth - 1);
-
 			{
 #if 0 // book3.chapter9 - hard-coded light pdf
 				auto on_light = vec3(random_double(213, 343), 554, random_double(227, 332));
@@ -110,12 +106,20 @@ vec3 color(const ray& r, const scene *s, int depth)
 				pdf_val = p.value(scattered.direction());
 #endif // book3.chapter10.3
 
-				std::shared_ptr<pdf> p = srec.pdf_ptr;
-				if (s->GetLight() != nullptr)
-					p = std::make_shared<mixture_pdf>(
-						std::make_shared<hittable_pdf>(s->GetLight(), rec.p),
-						srec.pdf_ptr);
+				// note that light_pdf is based on material_pdf is uniform (lambertian)
+				// so it won't work with materials such as metal (where light may not be reflected from light at all) 
+				
+				std::shared_ptr<pdf> material_pdf = srec.pdf_ptr;
 
+				if (material_pdf == nullptr)
+					return srec.attenuation * color(srec.scattered_ray_without_pdf, s, depth - 1);
+				
+				std::shared_ptr<pdf> p = material_pdf;
+				if (s->GetLights() != nullptr && !s->GetLights()->objects.empty()) // in case there is no light specified
+					p = std::make_shared<mixture_pdf>(
+						material_pdf, 
+						std::make_shared<hittable_pdf>(s->GetLights(), rec.p));
+				
 				ray scattered = ray(rec.p, p->generate(), r.time());
 				double pdf_val = p->value(scattered.direction());
 

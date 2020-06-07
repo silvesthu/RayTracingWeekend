@@ -21,10 +21,10 @@ public:
 	scene() {}
 	virtual ~scene() {}
 
-	void Add(std::shared_ptr<hittable> h) { world.list.push_back(h); }
+	void Add(std::shared_ptr<hittable> h) { world.objects.push_back(h); }
 
 	const hittable_list& GetWorld() const { return world; };
-	const std::shared_ptr<hittable> GetLight() const { return light; }
+	std::shared_ptr<hittable_list> GetLights() const { return lights; }
 	RenderType GetRenderType() const { return render_type; }
 	BackgroundType GetBackgroundType() const { return background_type; }
 
@@ -32,7 +32,7 @@ public:
 
 protected:
 	hittable_list world;
-	std::shared_ptr<hittable> light;
+	std::shared_ptr<hittable_list> lights = std::make_shared<hittable_list>();
 	camera cam;
 
 	RenderType render_type = RenderType::Shaded;
@@ -47,15 +47,15 @@ public:
 		std::shared_ptr<texture> pertext = std::make_shared<noise_texture>(4.0);
 		std::shared_ptr<texture> four = std::make_shared<constant_texture>(vec3(4, 4, 4)); // color with scale
 
-		std::vector<std::shared_ptr<hittable>> list;
+		std::vector<std::shared_ptr<hittable>> objects;
 
-		list.push_back(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.0,
+		objects.push_back(std::make_shared<sphere>(vec3(0, -1000, 0), 1000.0,
 			std::make_shared<lambertian>(pertext)));
-		list.push_back(std::make_shared<sphere>(vec3(0, 2, 0), 2.0,
+		objects.push_back(std::make_shared<sphere>(vec3(0, 2, 0), 2.0,
 			std::make_shared<lambertian>(pertext)));
-		list.push_back(std::make_shared<sphere>(vec3(0, 7, 0), 2.0,
+		objects.push_back(std::make_shared<sphere>(vec3(0, 7, 0), 2.0,
 			std::make_shared<diffuse_light>(four)));
-		list.push_back(std::make_shared<xy_rect>(3.0, 5.0, 1.0, 3.0, -2.0,
+		objects.push_back(std::make_shared<xy_rect>(3.0, 5.0, 1.0, 3.0, -2.0,
 			std::make_shared<diffuse_light>(four)));
 
 		auto lookfrom = vec3(24, 5, 5);
@@ -64,7 +64,7 @@ public:
 		auto aperture = 0.2f;
 		auto vfov = 20.0;
 
-		this->world = hittable_list(list);
+		this->world = hittable_list(objects);
 		this->cam = camera(lookfrom, lookat, vec3(0.0, 1.0, 0.0), vfov, aspect, aperture, dist_to_focus, 0.0, 1.0);
 	}
 };
@@ -188,39 +188,52 @@ public:
 		std::shared_ptr<texture> light_tex = std::make_shared<constant_texture>(vec3(15.0, 15.0, 15.0));
 		auto light = std::make_shared<diffuse_light>(light_tex);
 
-		std::vector<std::shared_ptr<hittable>> list;
+		std::vector<std::shared_ptr<hittable>> objects;
 
-		list.push_back(
+		objects.push_back(
 			std::make_shared<xz_rect>(213.0, 343.0, 227.0, 332.0, 554.0, light));
-		this->light = list.back();
+		lights->objects.push_back(objects.back());
 
-		list.push_back(
+		objects.push_back(
 			std::make_shared<flip_normals>(
 				std::make_shared<yz_rect>(0.0, 555.0, 0.0, 555.0, 555.0, green)));
-		list.push_back(
+		objects.push_back(
 			std::make_shared<yz_rect>(0.0, 555.0, 0.0, 555.0, 0.0, red));
 
-		list.push_back(
+		objects.push_back(
 			std::make_shared<flip_normals>(
 				std::make_shared<xz_rect>(0.0, 555.0, 0.0, 555.0, 555.0, white)));
-		list.push_back(
+		objects.push_back(
 			std::make_shared<xz_rect>(0.0, 555.0, 0.0, 555.0, 0.0, white));
-		list.push_back(
+		objects.push_back(
 			std::make_shared<flip_normals>(
 				std::make_shared<xy_rect>(0.0, 555.0, 0.0, 555.0, 555.0, white)));
 
-		list.push_back(
+		objects.push_back(
 			std::make_shared<translate>(
 				std::make_shared<rotate_y>(
 					std::make_shared<box>(vec3(0.0, 0.0, 0.0), vec3(165.0, 165.0, 165.0), white),
 					-18.0),
 				vec3(130.0, 0.0, 65.0)));
 
+#if 1 // book3.chapter12 - glass sphere
+ 		objects.pop_back(); // pop short box
+
+ 		objects.push_back(
+ 			std::make_shared<sphere>(vec3(190, 90, 190), 90, std::make_shared<dielectric>(1.5)));
+		lights->objects.push_back(objects.back());
+#endif // book3.chapter12.4
+
+		std::shared_ptr<material> tall_box_material = white;
+#if 0 // book3.chapter12.2 - aluminum box
 		std::shared_ptr<material> aluminum = std::make_shared<metal>(vec3(0.8, 0.85, 0.88), 0.0);
-		list.push_back(
+		tall_box_material = aluminum;
+#endif // book3.chapter12.2
+		
+		objects.push_back(
 			std::make_shared<translate>(
 				std::make_shared<rotate_y>(
-					std::make_shared<box>(vec3(0.0, 0.0, 0.0), vec3(165.0, 330.0, 165.0), aluminum),
+					std::make_shared<box>(vec3(0.0, 0.0, 0.0), vec3(165.0, 330.0, 165.0), tall_box_material),
 					15.0),
 				vec3(265.0, 0.0, 295.0)));
 
@@ -230,7 +243,7 @@ public:
 		auto aperture = 0.0;
 		auto vfov = 40.0;
 
-		this->world = hittable_list(list);
+		this->world = hittable_list(objects);
 		this->cam = camera(lookfrom, lookat, vec3(0.0, 1.0, 0.0), vfov, aspect, aperture, dist_to_focus, 0.0, 1.0);
 		this->background_type = BackgroundType::Black;
 	}

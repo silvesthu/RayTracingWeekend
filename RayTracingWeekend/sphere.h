@@ -84,6 +84,28 @@ public:
 	{
 		return movement.bounding_box(center, radius, t0, t1, box);
 	}
+
+	virtual double pdf_value(const vec3& o, const vec3& v) const override
+	{
+		hit_record rec;
+		// ensure hit if direction is right by letting 0.001 < FLT_MAX < +inf
+		if (!this->hit(ray(o, v, FLT_MAX), 0.001, std::numeric_limits<double>::infinity(), rec))
+			return 0.0;
+
+		double cos_theta_max = sqrt(1 - radius * radius / (center - o).length_squared());
+		double solid_angle = 2.0 * M_PI * (1.0 - cos_theta_max);
+
+		return 1.0 / solid_angle;
+	}
+
+	virtual vec3 random(const vec3& o) const override
+	{
+		vec3 direction = center - o;
+		double distance_squared = direction.length_squared();
+		onb uvw;
+		uvw.build_from_w(direction);
+		return uvw.local(random_to_sphere(radius, distance_squared));
+	}
 	
 	void set_movement(const movement_type& m)
 	{

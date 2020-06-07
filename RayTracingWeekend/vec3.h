@@ -86,55 +86,6 @@ inline vec3 lerp(vec3 from, vec3 to, double t)
 	return (1.0 - t) * to + t * from;
 }
 
-inline vec3 random_in_unit_sphere()
-{
-	static std::uniform_real_distribution<double> uniform;
-	static std::minstd_rand engine;
-
-	vec3 p = { 0, 0, 0 };
-	do {
-		vec3 random_vector(uniform(engine), uniform(engine), uniform(engine));
-		p = 2.0 * random_vector - vec3(1, 1, 1); // -1 ~ 1 box
-	} while (dot(p, p) >= 1.0); // unit sphere
-	return p;
-}
-
-inline vec3 random_unit_vector() 
-{
-	static std::uniform_real_distribution<double> uniform;
-	static std::minstd_rand engine;
-
-	auto a = uniform(engine) * 2.0 * M_PI;
-	auto z = uniform(engine) * 2.0 - 1.0;
-	auto r = sqrt(1 - z * z);
-	return vec3(r * cos(a), r * sin(a), z);
-}
-
-inline vec3 random_in_hemisphere(const vec3& normal)
-{
-	vec3 in_unit_sphere = random_in_unit_sphere();
-	if (dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
-		return in_unit_sphere;
-	else
-		return -in_unit_sphere;
-}
-
-inline vec3 random_cosine_direction() 
-{
-	static std::uniform_real_distribution<double> uniform;
-	static std::minstd_rand engine;
-
-	auto r1 = uniform(engine);
-	auto r2 = uniform(engine);
-	auto z = sqrt(1 - r2);
-
-	auto phi = 2 * M_PI * r1;
-	auto x = cos(phi) * sqrt(r2);
-	auto y = sin(phi) * sqrt(r2);
-
-	return vec3(x, y, z);
-}
-
 inline void vec3::make_unit_vector()
 {
 	*this = normalize(*this);

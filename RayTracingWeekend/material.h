@@ -50,7 +50,6 @@ inline double schlick(double cosine, double ref_idx)
 
 struct scatter_record
 {
-	bool scattered_without_pdf = false;
 	ray scattered_ray_without_pdf;
 	std::shared_ptr<pdf> pdf_ptr;
 
@@ -107,7 +106,6 @@ public:
 		sampling_pdf = dot(uvw.w(), scattered.direction()) / M_PI;
 #endif // onb
 
-		srec.scattered_without_pdf = false;
 		srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
 		srec.pdf_ptr = std::make_shared<cosine_pdf>(rec.normal);
 
@@ -133,7 +131,6 @@ public:
 		vec3 reflected = reflect(normalize(r_in.direction()), rec.normal);
 		srec.scattered_ray_without_pdf = ray(rec.p, reflected + fuzz * random_in_unit_sphere(), r_in.time());
 		srec.attenuation = albedo;
-		srec.scattered_without_pdf = true;
 		srec.pdf_ptr = nullptr;
 		return true;
 	}
