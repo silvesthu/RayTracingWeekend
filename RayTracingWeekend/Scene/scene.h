@@ -24,6 +24,7 @@ public:
 	void Add(std::shared_ptr<hittable> h) { world.list.push_back(h); }
 
 	const hittable_list& GetWorld() const { return world; };
+	const std::shared_ptr<hittable> GetLight() const { return light; }
 	RenderType GetRenderType() const { return render_type; }
 	BackgroundType GetBackgroundType() const { return background_type; }
 
@@ -31,6 +32,7 @@ public:
 
 protected:
 	hittable_list world;
+	std::shared_ptr<hittable> light;
 	camera cam;
 
 	RenderType render_type = RenderType::Shaded;
@@ -190,6 +192,7 @@ public:
 
 		list.push_back(
 			std::make_shared<xz_rect>(213.0, 343.0, 227.0, 332.0, 554.0, light));
+		this->light = list.back();
 
 		list.push_back(
 			std::make_shared<flip_normals>(
@@ -213,10 +216,11 @@ public:
 					-18.0),
 				vec3(130.0, 0.0, 65.0)));
 
+		std::shared_ptr<material> aluminum = std::make_shared<metal>(vec3(0.8, 0.85, 0.88), 0.0);
 		list.push_back(
 			std::make_shared<translate>(
 				std::make_shared<rotate_y>(
-					std::make_shared<box>(vec3(0.0, 0.0, 0.0), vec3(165.0, 330.0, 165.0), white),
+					std::make_shared<box>(vec3(0.0, 0.0, 0.0), vec3(165.0, 330.0, 165.0), aluminum),
 					15.0),
 				vec3(265.0, 0.0, 295.0)));
 

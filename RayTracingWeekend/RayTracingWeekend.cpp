@@ -30,7 +30,7 @@ using namespace concurrency;
 #include "Scene/scene.h"
 
 const int size_multipler = 4;
-const int subPixelCount = 10;
+const int subPixelCount = 64;
 
 const int nx = 100 * size_multipler;
 const int ny = 100 * size_multipler;
@@ -42,26 +42,31 @@ const int max_depth = 1;
 const int max_depth = 100;
 #endif
 
-vec3 color(const ray& r, const scene *s, int recursion_depth)
+vec3 color(const ray& r, const scene *s, int depth)
 {
+	if (depth <= 0)
+		return vec3(0.0);
+
 	hit_record rec;
 	// z_min = 0 will cause hit same point while reflection
 	if (s->GetWorld().hit(r, 0.001f, std::numeric_limits<double>::max(), rec))
 	{
-		ray scattered;
-		vec3 attenuation;
-		vec3 emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
-		double pdf_val = 1.0; // in case material does not set it properly
-		vec3 albedo;
-
 		switch (s->GetRenderType())
 		{
 		case RenderType::Shaded:
-			if (recursion_depth < max_depth && rec.mat_ptr != nullptr && rec.mat_ptr->scatter(r, rec, attenuation, scattered, pdf_val))
-			{
-				if (pdf_val <= 0.0)
-					return emitted;
+		{
+			vec3 emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+			vec3 albedo;
+			scatter_record srec;
 
+			if (!rec.mat_ptr->scatter(r, rec, srec))
+				return emitted;
+
+			// step w/o pdf
+			if (srec.scattered_without_pdf)
+				return srec.attenuation * color(srec.scattered_ray_without_pdf, s, depth - 1);
+
+			{
 #if 0 // book3.chapter9 - hard-coded light pdf
 				auto on_light = vec3(random_double(213, 343), 554, random_double(227, 332));
 				auto to_light = on_light - rec.p;
@@ -105,12 +110,24 @@ vec3 color(const ray& r, const scene *s, int recursion_depth)
 				pdf_val = p.value(scattered.direction());
 #endif // book3.chapter10.3
 
-				return emitted + attenuation * color(scattered, s, recursion_depth + 1) * (double)(rec.mat_ptr->scattering_pdf(r, rec, scattered) / pdf_val);
+				std::shared_ptr<pdf> p = srec.pdf_ptr;
+				if (s->GetLight() != nullptr)
+					p = std::make_shared<mixture_pdf>(
+						std::make_shared<hittable_pdf>(s->GetLight(), rec.p),
+						srec.pdf_ptr);
+
+				ray scattered = ray(rec.p, p->generate(), r.time());
+				double pdf_val = p->value(scattered.direction());
+
+				if (pdf_val <= 0.0)
+					return emitted;
+
+				return emitted
+					+ srec.attenuation * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+					* color(scattered, s, depth - 1)
+					/ pdf_val;
 			}
-			else
-			{
-				return emitted;
-			}
+		}
 		case RenderType::Normal:
 			return 0.5f * (rec.normal + 1);
 		default:
@@ -167,8 +184,8 @@ void _for(_Index_type _First, _Index_type _Last, _Index_type _Step, const _Funct
 	// Parallel gives different result every time as RNG should not used across threads
 	// Switch to Serial to get stable result
 
-	//Concurrency::parallel_for(_First, _Last, _Step, _Func);
-	serial_for(_First, _Last, _Step, _Func);
+	Concurrency::parallel_for(_First, _Last, _Step, _Func);
+	//serial_for(_First, _Last, _Step, _Func);
 }
 
 int main(int argc, char* argv[])
@@ -208,7 +225,7 @@ int main(int argc, char* argv[])
 
 					// trace
 					ray r = cam.get_ray(u, v);
-					subPixels[s] = color(r, &scene, 0);
+					subPixels[s] = color(r, &scene, max_depth);
 				});
 
 				vec3 sum(0, 0, 0);
