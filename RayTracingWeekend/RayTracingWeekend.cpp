@@ -29,11 +29,11 @@ using namespace concurrency;
 
 #include "Scene/scene.h"
 
-const int size_multipler = 4;
+const int size_multiplier = 4;
 const int subPixelCount = 64;
 
-const int nx = 100 * size_multipler;
-const int ny = 100 * size_multipler;
+const int nx = 100 * size_multiplier;
+const int ny = 100 * size_multiplier;
 
 //#define DEBUG_RAY
 #ifdef DEBUG_RAY
@@ -233,12 +233,12 @@ int main(int argc, char* argv[])
 				});
 
 				vec3 sum(0, 0, 0);
-				for (auto& c : subPixels) // even slower with parallel_reduce
+				for (vec3& c : subPixels) // even slower with parallel_reduce
 				{
 					sum += c;
 				}
 
-				auto col = sum / static_cast<double>(subPixelCount);
+				vec3 col = sum / static_cast<double>(subPixelCount);
 
 				// to gamma 2, and clamp
 				col = vec3(std::min(sqrt(col.x), 1.0), std::min(sqrt(col.y), 1.0), std::min(sqrt(col.z), 1.0));
